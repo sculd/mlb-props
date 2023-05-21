@@ -67,7 +67,97 @@ def Player_to_ID(player_name):
         return ""
 def celsius_to_fahrenheit(celsius):
     
-    return ( celsius * (9/5) ) + 32    
+    return ( celsius * (9/5) ) + 32
+
+
+def get_matchup(game_boxscore, side):
+    opposite_side = "away" if side == "home" else "home"
+    all_side_players = game_boxscore[side]["players"]
+    
+    side_players_list = []
+    for home_player in all_side_players:
+        home_player = all_side_players[home_player]
+        home_player_name, home_player_id = home_player["person"]["fullName"], home_player["person"]["id"]
+        side_players_list.append({"name":home_player_name, "id":home_player_id})
+
+    side_players_dataframe = pd.DataFrame(side_players_list)
+    side_batting_lineup_ids = game_boxscore[side]["battingOrder"]
+    side_batters = side_players_dataframe[side_players_dataframe["id"].isin(side_batting_lineup_ids)]
+    valid_historical_season = int(Game["game_date"].iloc[0][0:4]) - 1
+    side_batter_stats_list = []
+
+    for side_batter in side_batters["id"]:
+        side_batter_stats_data = get_player_stat_data(side_batter, force_fetch = False)
+        if side_batter_stats_data is not None:
+            side_batter_stats = side_batter_stats_data["stats"]
+        else:
+            print(f'Error while getting {side} batter {side_batter} stat')
+            return None
+
+        if len(side_batter_stats) == 0:
+            print(f'{side} batter {side_batter} stat is empty')
+            return None
+        
+        for historical_batter_stat in side_batter_stats:
+            if historical_batter_stat["season"] == str(valid_historical_season):
+                season_batter_stats = historical_batter_stat["stats"]
+                season_batter_stats["name"] = side_batters["name"][side_batters["id"] == side_batter].iloc[0]
+                season_batter_stats["id"] = side_batters["id"][side_batters["id"] == side_batter].iloc[0]
+                
+                side_batter_game_day_stats = all_side_players[f"ID{side_batter}"]["stats"]["batting"]
+                
+                if side_batter_game_day_stats["hits"] < 1:
+                    hit_recorded = 0
+                elif side_batter_game_day_stats["hits"] >= 1:
+                    hit_recorded = 1
+                    
+                season_batter_stats["hit_recorded"] = hit_recorded
+                side_batter_stats_list.append(season_batter_stats)
+            
+    side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
+    
+    if len(side_team_batting_stats) < 1:
+        print(f'{side} side_team_batting_stats is empty for game')
+        return None
+    
+    opposing_pitcher_name, opposing_pitcher_id = Game[f"{opposite_side}_probable_pitcher"].iloc[0], Player_to_ID(Game[f"{opposite_side}_probable_pitcher"].iloc[0])
+    
+    side_batting_matchup = None
+    if type(opposing_pitcher_id) != type(np.int64()):
+        print(f'opposing_pitcher_id {opposing_pitcher_id} is not of int64 type')
+        pass
+    else:
+        opposing_pitcher_stats_data = get_player_stat_data(opposing_pitcher_id, force_fetch = False)
+        if opposing_pitcher_stats_data is not None:            
+            opposing_pitcher_stats = pd.json_normalize(opposing_pitcher_stats_data["stats"], max_level = 0)
+        else:
+            print(f'Error while getting {side} opssosing pitcher {opposing_pitcher_id} stat')
+            return None
+        
+        # If there is just no data from the API for this player
+        if len(opposing_pitcher_stats) == 0:
+            print(f'{side} opposing pitcher {opposing_pitcher_id} stat is empty')
+            pass
+        else:
+            valid_opposing_pitcher_season_stats = opposing_pitcher_stats[opposing_pitcher_stats["season"] == str(valid_historical_season)]["stats"].drop_duplicates(keep = "last")
+        
+            # If there is no historical data for last season
+            if len(valid_opposing_pitcher_season_stats) == 0:
+                print(f'{side} valid opposing pitcher {opposing_pitcher_id} season stat is empty')
+                pass
+            else:
+                opposing_pitcher_season_stats = valid_opposing_pitcher_season_stats.iloc[0]
+                opposing_pitcher_season_stats["name"] = opposing_pitcher_name
+                opposing_pitcher_season_stats["id"] = opposing_pitcher_id
+                
+                opposing_pitcher_stats_dataframe = pd.DataFrame([opposing_pitcher_season_stats])
+                opposing_pitcher_stats = pd.concat([opposing_pitcher_stats_dataframe]*len(side_team_batting_stats))
+                side_batting_matchup = pd.concat([opposing_pitcher_stats.reset_index(drop = True).add_prefix("pitching_"), side_team_batting_stats.reset_index(drop = True).add_prefix("batting_")], axis = 1)
+            
+                # =============================================================================
+                # End of calculating the side for the batters
+                # =============================================================================
+    return side_batting_matchup
 
 # =============================================================================
 # Start
@@ -105,289 +195,42 @@ for game_id in game_id_list:
     except Exception:
         continue
     
-    all_home_players = game_boxscore["home"]["players"]
+    home_batting_matchup = get_matchup(game_boxscore, "home")
+    away_batting_matchup = get_matchup(game_boxscore, "away")
     
-    home_players_list = []
-    for home_player in all_home_players:
-        
-        home_player = all_home_players[home_player]
-        
-        home_player_name, home_player_id = home_player["person"]["fullName"], home_player["person"]["id"]
-        
-        home_player_dict = {"name":home_player_name, "id":home_player_id}
-        home_players_list.append(home_player_dict)
-        
-    home_players_dataframe = pd.DataFrame(home_players_list)
-    
-    home_batting_lineup_ids = game_boxscore["home"]["battingOrder"]
-    
-    home_batters = home_players_dataframe[home_players_dataframe["id"].isin(home_batting_lineup_ids)]
-    
-    valid_historical_season = int(Game["game_date"].iloc[0][0:4]) - 1
-    
-    home_batter_stats_list = []
-    
-    for home_batter in home_batters["id"]:
-        
-        try:
-        
-            home_batter_stats = statsapi.player_stat_data(personId = home_batter, group="hitting", type="yearByYear", sportId=1)["stats"]
-            
-        except Exception:
-            continue
-        
-        if len(home_batter_stats) == 0:
-            continue
-        
-        for historical_batter_stat in home_batter_stats:
-            
-            if historical_batter_stat["season"] == str(valid_historical_season):
-                
-                season_batter_stats = historical_batter_stat["stats"]
-                season_batter_stats["name"] = home_batters["name"][home_batters["id"] == home_batter].iloc[0]
-                season_batter_stats["id"] = home_batters["id"][home_batters["id"] == home_batter].iloc[0]
-                
-                home_batter_game_day_stats = all_home_players[f"ID{home_batter}"]["stats"]["batting"]
-                
-                if home_batter_game_day_stats["hits"] < 1:
-                    
-                    hit_recorded = 0
-                    
-                elif home_batter_game_day_stats["hits"] >= 1:
-                    
-                    hit_recorded = 1
-                    
-                season_batter_stats["hit_recorded"] = hit_recorded
-                home_batter_stats_list.append(season_batter_stats)
-            
-    home_team_batting_stats = pd.DataFrame(home_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
-    
-    if len(home_team_batting_stats) < 1:
-        continue
-    
-    home_opposing_pitcher_name, home_opposing_pitcher_id = Game["away_probable_pitcher"].iloc[0], Player_to_ID(Game["away_probable_pitcher"].iloc[0])
-    
-    if type(home_opposing_pitcher_id) != type(np.int64()):
-        pass
-    else:
-
-        try:        
-
-            home_opposing_pitcher_stats = pd.json_normalize(statsapi.player_stat_data(personId = home_opposing_pitcher_id, group="pitching", type="yearByYear", sportId=1)["stats"], max_level = 0)
-        except Exception:
-            continue
-    
-        # If there is just no data from the API for this player
-    
-        if len(home_opposing_pitcher_stats) == 0:
-            pass
-        else:
-        
-            valid_home_opposing_pitcher_season_stats = home_opposing_pitcher_stats[home_opposing_pitcher_stats["season"] == str(valid_historical_season)]["stats"].drop_duplicates(keep = "last")
-        
-            # If there is no historical data for last season
-        
-            if len(valid_home_opposing_pitcher_season_stats) == 0:
-                pass
-            
-            else:
-    
-                home_opposing_pitcher_season_stats = valid_home_opposing_pitcher_season_stats.iloc[0]
-                home_opposing_pitcher_season_stats["name"] = home_opposing_pitcher_name
-                home_opposing_pitcher_season_stats["id"] = home_opposing_pitcher_id
-                
-                
-                home_team_opposing_pitcher_stats_dataframe = pd.DataFrame([home_opposing_pitcher_season_stats])
-                
-                home_team_opposing_pitcher_stats = pd.concat([home_team_opposing_pitcher_stats_dataframe]*len(home_team_batting_stats))
-                
-                home_batting_matchup = pd.concat([home_team_opposing_pitcher_stats.reset_index(drop = True).add_prefix("pitching_"), home_team_batting_stats.reset_index(drop = True).add_prefix("batting_")], axis = 1)
-            
-                # =============================================================================
-                # End of calculating the side for the batters on the home team
-                # =============================================================================
-    
-    all_away_players = game_boxscore["away"]["players"]
-    
-    away_players_list = []
-    for away_player in all_away_players:
-        
-        away_player = all_away_players[away_player]
-        
-        away_player_name, away_player_id = away_player["person"]["fullName"], away_player["person"]["id"]
-        
-        away_player_dict = {"name":away_player_name, "id":away_player_id}
-        away_players_list.append(away_player_dict)
-        
-    away_players_dataframe = pd.DataFrame(away_players_list)
-    
-    away_batting_lineup_ids = game_boxscore["away"]["battingOrder"]
-    
-    away_batters = away_players_dataframe[away_players_dataframe["id"].isin(away_batting_lineup_ids)]
-    
-    away_batter_stats_list = []
-    
-    for away_batter in away_batters["id"]:
-        
-        try:
-        
-            away_batter_stats = statsapi.player_stat_data(personId = away_batter, group="hitting", type="yearByYear", sportId=1)["stats"]
-            
-        except Exception:
-            continue
-        
-        if len(away_batter_stats) == 0:
-            continue
-        
-        for historical_batter_stat in away_batter_stats:
-            
-            if historical_batter_stat["season"] == str(valid_historical_season):
-                
-                season_batter_stats = historical_batter_stat["stats"]
-                season_batter_stats["name"] = away_batters["name"][away_batters["id"] == away_batter].iloc[0]
-                season_batter_stats["id"] = away_batters["id"][away_batters["id"] == away_batter].iloc[0]
-                
-                away_batter_game_day_stats = all_away_players[f"ID{away_batter}"]["stats"]["batting"]
-                
-                if away_batter_game_day_stats["hits"] < 1:
-                    
-                    hit_recorded = 0
-                    
-                elif away_batter_game_day_stats["hits"] >= 1:
-                    
-                    hit_recorded = 1
-                    
-                season_batter_stats["hit_recorded"] = hit_recorded
-                away_batter_stats_list.append(season_batter_stats)
-            
-    away_team_batting_stats = pd.DataFrame(away_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
-    
-    if len(away_team_batting_stats) < 1:
-        continue
-    
-    away_opposing_pitcher_name, away_opposing_pitcher_id = Game["home_probable_pitcher"].iloc[0], Player_to_ID(Game["home_probable_pitcher"].iloc[0])
-    
-    if type(away_opposing_pitcher_id) != type(np.int64()):
-        pass
-    else:
-        try:
-        
-            away_opposing_pitcher_stats = pd.json_normalize(statsapi.player_stat_data(personId = away_opposing_pitcher_id, group="pitching", type="yearByYear", sportId=1)["stats"], max_level = 0)
-            
-        except Exception:
-            continue
-        
-        if len(away_opposing_pitcher_stats) == 0:
-            pass
-        else:
-        
-            valid_away_opposing_pitcher_season_stats = away_opposing_pitcher_stats[away_opposing_pitcher_stats["season"] == str(2022)]["stats"].drop_duplicates(keep = "last")
-        
-            if len(valid_away_opposing_pitcher_season_stats) == 0:
-                pass
-            else:
-            
-                away_opposing_pitcher_season_stats = valid_away_opposing_pitcher_season_stats.iloc[0]
-                away_opposing_pitcher_season_stats["name"] = away_opposing_pitcher_name
-                away_opposing_pitcher_season_stats["id"] = away_opposing_pitcher_id
-                
-                away_team_opposing_pitcher_stats_dataframe = pd.DataFrame([away_opposing_pitcher_season_stats])
-                        
-                away_team_opposing_pitcher_stats = pd.concat([away_team_opposing_pitcher_stats_dataframe]*len(away_team_batting_stats))
-                
-                away_batting_matchup = pd.concat([away_team_opposing_pitcher_stats.reset_index(drop = True).add_prefix("pitching_"), away_team_batting_stats.reset_index(drop = True).add_prefix("batting_")], axis = 1)
-            
-                # =============================================================================
-                # End of calculating the side for the batters on the away team
-                # =============================================================================
-    
-    if (len(home_batting_matchup) == 0) and (len(away_batting_matchup) == 0):
-        
-        continue
-    
-    elif (len(home_batting_matchup) >= 1) and (len(away_batting_matchup) == 0):
-        
+    if (len(home_batting_matchup) == 0) and (len(away_batting_matchup) == 0):        
+        continue    
+    elif (len(home_batting_matchup) >= 1) and (len(away_batting_matchup) == 0):        
         game_matchup = home_batting_matchup.reset_index(drop = True).copy()
-        game_matchup["game_id"] = Game["game_id"].iloc[0]
-        game_matchup["game_venue"] = Game["venue_name"].iloc[0]
-        game_matchup["game_date"] = Game["game_date"].iloc[0]
-        game_matchup["game_datetime"] = Game["game_datetime"].iloc[0]
-        
-        if Game["venue_name"].isin(list(Park_Data["Venue"])).iloc[0] == False:
-            continue
-        
-        park_lat = Park_Data["latitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-        park_lon = Park_Data["longitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-    
-        point_object = meteostat.Point(lat = park_lat, lon = park_lon)
-
-        historical_weather = meteostat.Hourly(loc = point_object, start = (pd.to_datetime(game_matchup["game_date"].iloc[0])), end = (pd.to_datetime(game_matchup["game_date"].iloc[0]) + timedelta(days = 1)), timezone = "America/Chicago").fetch().reset_index()
-
-        pre_game_weather = historical_weather[historical_weather["time"] <= (pd.to_datetime(Game["game_datetime"].iloc[0])).tz_convert("America/Chicago")]
-        last_hour_weather = pre_game_weather.tail(1).copy()
-        last_hour_weather["temp_f"] = last_hour_weather["temp"].apply(celsius_to_fahrenheit).iloc[0]
-        
-        game_temperature = last_hour_weather["temp_f"].iloc[0]
-        
-        game_matchup["temp"] = game_temperature
-
-        game_matchups.append(game_matchup)
-        
-    elif (len(home_batting_matchup) == 0) and (len(away_batting_matchup) >= 1):
-        
-        game_matchup = away_batting_matchup.reset_index(drop = True).copy()
-        game_matchup["game_id"] = Game["game_id"].iloc[0]
-        game_matchup["game_venue"] = Game["venue_name"].iloc[0]
-        game_matchup["game_date"] = Game["game_date"].iloc[0]
-        game_matchup["game_datetime"] = Game["game_datetime"].iloc[0]
-        
-        if Game["venue_name"].isin(list(Park_Data["Venue"])).iloc[0] == False:
-            continue
-        
-        park_lat = Park_Data["latitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-        park_lon = Park_Data["longitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-    
-        point_object = meteostat.Point(lat = park_lat, lon = park_lon)
-
-        historical_weather = meteostat.Hourly(loc = point_object, start = (pd.to_datetime(game_matchup["game_date"].iloc[0])), end = (pd.to_datetime(game_matchup["game_date"].iloc[0]) + timedelta(days = 1)), timezone = "America/Chicago").fetch().reset_index()
-
-        pre_game_weather = historical_weather[historical_weather["time"] <= (pd.to_datetime(Game["game_datetime"].iloc[0])).tz_convert("America/Chicago")]
-        last_hour_weather = pre_game_weather.tail(1).copy()
-        last_hour_weather["temp_f"] = last_hour_weather["temp"].apply(celsius_to_fahrenheit).iloc[0]
-        
-        game_temperature = last_hour_weather["temp_f"].iloc[0]
-        
-        game_matchup["temp"] = game_temperature
-
-        game_matchups.append(game_matchup)
-        
-    elif (len(home_batting_matchup) >= 0) and (len(away_batting_matchup) >= 1):
-        
+    elif (len(home_batting_matchup) == 0) and (len(away_batting_matchup) >= 1):        
+        game_matchup = away_batting_matchup.reset_index(drop = True).copy()        
+    elif (len(home_batting_matchup) >= 0) and (len(away_batting_matchup) >= 1):        
         game_matchup = pd.concat([home_batting_matchup, away_batting_matchup], axis = 0).reset_index(drop = True)
-        game_matchup["game_id"] = Game["game_id"].iloc[0]
-        game_matchup["game_venue"] = Game["venue_name"].iloc[0]
-        game_matchup["game_date"] = Game["game_date"].iloc[0]
-        game_matchup["game_datetime"] = Game["game_datetime"].iloc[0]
-        
-        if Game["venue_name"].isin(list(Park_Data["Venue"])).iloc[0] == False:
-            continue
-        
-        park_lat = Park_Data["latitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-        park_lon = Park_Data["longitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
-    
-        point_object = meteostat.Point(lat = park_lat, lon = park_lon)
 
-        historical_weather = meteostat.Hourly(loc = point_object, start = (pd.to_datetime(game_matchup["game_date"].iloc[0])), end = (pd.to_datetime(game_matchup["game_date"].iloc[0]) + timedelta(days = 1)), timezone = "America/Chicago").fetch().reset_index()
-
-        pre_game_weather = historical_weather[historical_weather["time"] <= (pd.to_datetime(Game["game_datetime"].iloc[0])).tz_convert("America/Chicago")]
-        last_hour_weather = pre_game_weather.tail(1).copy()
-        last_hour_weather["temp_f"] = last_hour_weather["temp"].apply(celsius_to_fahrenheit).iloc[0]
-        
-        game_temperature = last_hour_weather["temp_f"].iloc[0]
-        
-        game_matchup["temp"] = game_temperature
+    game_matchup["game_id"] = Game["game_id"].iloc[0]
+    game_matchup["game_venue"] = Game["venue_name"].iloc[0]
+    game_matchup["game_date"] = Game["game_date"].iloc[0]
+    game_matchup["game_datetime"] = Game["game_datetime"].iloc[0]
     
-        game_matchups.append(game_matchup)
+    if Game["venue_name"].isin(list(Park_Data["Venue"])).iloc[0] == False:
+        continue
+    
+    park_lat = Park_Data["latitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
+    park_lon = Park_Data["longitude"][Park_Data["Venue"] == game_matchup["game_venue"].iloc[0]].iloc[0]
+
+    point_object = meteostat.Point(lat = park_lat, lon = park_lon)
+
+    historical_weather = meteostat.Hourly(loc = point_object, start = (pd.to_datetime(game_matchup["game_date"].iloc[0])), end = (pd.to_datetime(game_matchup["game_date"].iloc[0]) + timedelta(days = 1)), timezone = "America/Chicago").fetch().reset_index()
+
+    pre_game_weather = historical_weather[historical_weather["time"] <= (pd.to_datetime(Game["game_datetime"].iloc[0])).tz_convert("America/Chicago")]
+    last_hour_weather = pre_game_weather.tail(1).copy()
+    last_hour_weather["temp_f"] = last_hour_weather["temp"].apply(celsius_to_fahrenheit).iloc[0]
+    
+    game_temperature = last_hour_weather["temp_f"].iloc[0]
+    
+    game_matchup["temp"] = game_temperature
+
+    game_matchups.append(game_matchup)
     
 end = datetime.now()
 print(f"Elapsed Time: {end - start}")
@@ -395,7 +238,7 @@ print(f"Elapsed Time: {end - start}")
 # =============================================================================
 # End    
 # =============================================================================
-    
+
 game_matchup_dataframe = pd.concat(game_matchups).dropna()
 print(f"Unique Games: {len(game_matchup_dataframe['game_id'].drop_duplicates())}")
 
