@@ -1,0 +1,6 @@
+pycaret
+meteostat
+pandas
+numpy
+statsapi
+pickle
