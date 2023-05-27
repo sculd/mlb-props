@@ -15,9 +15,7 @@ from collect_data.player_stat import *
 from collect_data.venue_game_temperatures import *
 
 base_dir = "collect_data"
-_pkl_file_path = f'{base_dir}/game_matchups.pkl'
 
-_game_matchups = pickle.load(open(_pkl_file_path, 'rb'))
 from static_data.load_static_data import *
 
 def player_name_to_id(player_name):
