@@ -8,6 +8,6 @@ Park_Data = pd.read_csv(f"{base_dir}/mlb_parks.csv")
 park_venues = set(Park_Data["Venue"])
 
 df_teams_ids = Teams_and_IDs
-df_player_positions = Player_Positions
+df_player_team_positions = Player_Positions
 df_mlb_parks = Park_Data
 df_park_venues = park_venues
