@@ -30,10 +30,16 @@ Features = ['pitching_gamesPlayed', 'pitching_gamesStarted', 'pitching_groundOut
 
 #Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]] = Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]].replace([".---", "-.--"], np.nan).astype(float)
 
-Hit_Real_Features = ["pitching_gamesPlayed","pitching_runs", "pitching_strikeOuts", "pitching_hits","pitching_id", 
-                     "batting_gamesPlayed", "batting_runs","batting_strikeOuts", "batting_hits","batting_rbi", "batting_hit_recorded",
-                     "batting_id", "temp", "game_venue", "game_year"] + ["batting_name", "pitching_name"]
+features = [
+    "pitching_gamesPlayed","pitching_runs", "pitching_strikeOuts", "pitching_hits","pitching_id", 
+    "batting_gamesPlayed", "batting_runs","batting_strikeOuts", "batting_hits","batting_rbi", "batting_hit_recorded",
+    "batting_id", "temp", "game_venue", "game_year"] + ["batting_name", "pitching_name"]
 
+Hit_Real_Features = features
+
+categorical_features = ["game_venue"] + ["batting_name", "pitching_name"]
+
+ignore_features = ["pitching_id", "batting_id", "game_year"]
 
 #Exclude_Variables = ["Unnamed: 0","pitching_numberOfPitches","pitching_outs","pitching_strikes","pitching_strikePercentage","pitching_totalBases","pitching_baseOnBalls","pitching_hitByPitch","pitching_atBats",       'batting_groundOuts','batting_hitByPitch', 'batting_caughtStealing','batting_stolenBases','batting_plateAppearances',"pitching_game_id","batting_game_id",'batting_leftOnBase', 'batting_sacBunts', 'batting_sacFlies',"batting_numberOfPitches","batting_totalBases","batting_baseOnBalls", "batting_doubles", "batting_triples","batting_homeRuns","batting_airOuts","batting_atBats", "batting_rbi"]
 
