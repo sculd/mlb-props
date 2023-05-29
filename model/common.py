@@ -55,3 +55,10 @@ def odds_calculator(probability):
 
 def juiced_odds_calculator(probability):
     return odds_calculator(probabiliby) - 15
+
+def odds_to_probability(odds):
+    odds = float(odds)
+    if odds >= 0.0:
+        return 1.0 / (1.0 + (odds / 100.0))
+    else:
+        return 1.0 / (1.0 + (100.0 / abs(odds)))
