@@ -78,6 +78,14 @@ def get_side_matchup(game_id, side, force_fetch = False):
                     hit_recorded = 1
                     
                 season_batter_stats["hit_recorded"] = hit_recorded
+
+                if side_batter_game_day_stats["homeRuns"] < 1:
+                    hr_recorded = 0
+                elif side_batter_game_day_stats["homeRuns"] >= 1:
+                    hr_recorded = 1
+
+                season_batter_stats["homeRuns_recorded"] = hr_recorded
+
                 side_batter_stats_list.append(season_batter_stats)
             
     side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")

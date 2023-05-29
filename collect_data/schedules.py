@@ -31,24 +31,40 @@ def fetch_schdules_year(year):
 
     print(f'done fetch_schdules_year {year}')
 
-def fetch_schedule_since(start_date):
-    print(f'fetch_schedule_since {start_date}')
+def fetch_schedule_between(start_date, end_date, update_schedule=True):
+    print(f'fetch_schedule_between {start_date} {end_date}')
     global _schedules
     
-    date_today = datetime.today().strftime("%Y-%m-%d")
-    schedules = statsapi.schedule(start_date = start_date, end_date = date_today)
+    schedules = statsapi.schedule(start_date = start_date, end_date = end_date)
     fetched_schedules = {}
     for sc in schedules:
-        _schedules[sc['game_id']] = sc
+        if update_schedule:
+            _schedules[sc['game_id']] = sc
         fetched_schedules[sc['game_id']] = sc
 
-    print(f'done fetch_schedule_since {start_date} to {date_today}')
+    print(f'done fetch_schedule_between {start_date} to {end_date}')
     return fetched_schedules
 
-def fetch_schedule_today():
-    print(f'fetch_schedule_today')
+def fetch_schedule_since(start_date, update_schedule=True):
+    print(f'fetch_schedule_since {start_date}')
     date_today = datetime.today().strftime("%Y-%m-%d")
-    ret = fetch_schedule_since(date_today)
+    ret = fetch_schedule_between(start_date, date_today, update_schedule=update_schedule)
+    print(f'done fetch_schedule_since {start_date} to {date_today}')
+    return ret
+
+def fetch_schedule_yesterday(update_schedule=True):
+    'yesterday games have `Final` status'
+    date_yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    print(f'fetch_schedule_yesterday {date_yesterday}')
+    ret = fetch_schedule_between(date_yesterday, date_yesterday, update_schedule=update_schedule)
+    print(f'done fetch_schedule_yesterday {date_yesterday}')
+    return ret
+
+def fetch_schedule_today(update_schedule=True):
+    "today games has not yet started"
+    date_today = datetime.today().strftime("%Y-%m-%d")
+    print(f'fetch_schedule_today {date_today}')
+    ret = fetch_schedule_between(date_today, date_today, update_schedule=update_schedule)
     print(f'done fetch_schedule_today {date_today}')
     return ret
 
