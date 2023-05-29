@@ -8,3 +8,4 @@ My fork [here|https://github.com/sculd/mlb-props].
 * `model_training_run.ipynb` trains a model.
 * `update_data_run.py` should run at the beginning of each day, fetching the previous date's matchup and updating all the data.
 * `fetch_today_matchup_and_odds_run.py` should run at the beginning of each day, this creates matchup for today's live bet and fetches the odds for today's games.
+* add this line `0 8 * * * /home/junlim/projects/mlb-props/daily_run.sh` to crontab to run it every 8am daily.
