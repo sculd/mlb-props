@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import math
 import pickle
+import copy
 import threading
 
 from collect_data.common import *
@@ -30,6 +31,15 @@ def get_game_id_list_year(year, force_fetch = False):
         
     print(f'done getting game_id list {year}')
     return data
+
+def add_game_id_list(year, new_game_id_list):
+    if year not in _game_id_lists:
+        _game_id_lists[year] = copy.copy(new_game_id_list)
+    _game_id_set = set(_game_id_lists[year])
+    game_id_list = sorted(_game_id_lists[year])
+    new_game_id_list = sorted(new_game_id_list)
+    new_game_id_list = [id for id in new_game_id_list if id not in _game_id_set]
+    _game_id_lists[year] += new_game_id_list
 
 def dump_game_ids():
     pickle.dump(_game_id_lists, open(_pkl_file_path, 'wb'))

@@ -24,13 +24,33 @@ def get_end_date(year):
 def fetch_schdules_year(year):
     print(f'fetch_schdules_year {year}')
     global _schedules
-    data = None
 
     schedules = statsapi.schedule(start_date = f"{year}-04-01", end_date = get_end_date(year))
     for sc in schedules:
         _schedules[sc['game_id']] = sc
 
     print(f'done fetch_schdules_year {year}')
+
+def fetch_schedule_since(start_date):
+    print(f'fetch_schedule_since {start_date}')
+    global _schedules
+    
+    date_today = datetime.today().strftime("%Y-%m-%d")
+    schedules = statsapi.schedule(start_date = start_date, end_date = date_today)
+    fetched_schedules = {}
+    for sc in schedules:
+        _schedules[sc['game_id']] = sc
+        fetched_schedules[sc['game_id']] = sc
+
+    print(f'done fetch_schedule_since {start_date} to {date_today}')
+    return fetched_schedules
+
+def fetch_schedule_today():
+    print(f'fetch_schedule_today')
+    date_today = datetime.today().strftime("%Y-%m-%d")
+    ret = fetch_schedule_since(date_today)
+    print(f'done fetch_schedule_today {date_today}')
+    return ret
 
 def dump_schedule_data():
     pickle.dump(_schedules, open(_pkl_file_path, 'wb'))

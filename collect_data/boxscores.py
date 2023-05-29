@@ -45,9 +45,8 @@ def get_boxscore_data_batch(game_ids, force_fetch = False):
 
     return [get_boxscore_data(game_id, force_fetch = force_fetch) for game_id in game_ids]
 
-def ingest_boxscore_year(year):
-    print(f'year: {year}')
-    game_id_list = get_game_id_list_year(year)
+def ingest_boxscore_game_ids(game_id_list):
+    print(f'game_ids: {len(game_id_list)}')
 
     game_id_list_splits = np.array_split(game_id_list, 8)
     ths = []
@@ -61,7 +60,14 @@ def ingest_boxscore_year(year):
     for th in ths:
         th.join()
     
-    print(f'done ingest_boxscore_year {year}')    
+    print(f'done ingest_boxscore_game_ids {len(game_id_list)}')    
+
+def ingest_boxscore_year(year):
+    print(f'year: {year}')
+    game_id_list = get_game_id_list_year(year)
+    ret = ingest_boxscore_game_ids(game_id_list)  
+    print(f'done ingest_boxscore_year {year}')  
+    return ret
 
 def dump_boxscore_cache():
     global _boxscores
