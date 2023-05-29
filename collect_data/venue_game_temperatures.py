@@ -36,13 +36,15 @@ def get_venue_game_temperatures(lat, lon, game_date, game_datetime):
 
     return game_temperature
 
-def ingest_venue_game_temperatures_for_game_id_list(game_id_list):
+def ingest_venue_game_temperatures_for_game_id_list(game_id_list, schs = None):
+    if schs is None:
+        schs = _schedules
     cnt_invalid_venue = 0
     invalid_venues = set()
     for i, game_id in enumerate(game_id_list):
         if i % 1000 == 0:
             print(f'processing {i} out of {len(game_id_list)} game_id {game_id} cnt_invalid_venue: {cnt_invalid_venue}, invalid_venues: {len(invalid_venues)}')
-        game = _schedules[game_id]
+        game = schs[game_id]
     
         if game["venue_name"] not in park_venues:
             #print(f'game["venue_name"] {game["venue_name"]} not valid')
