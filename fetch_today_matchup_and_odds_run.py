@@ -38,11 +38,3 @@ import collect_data.game_matchup
 df_game_matchup_updated = collect_data.game_matchup.get_df_game_matchup(list(scs_today.keys()))
 print(f"df_game_matchup_updated {len(df_game_matchup_updated)}")
 df_game_matchup_updated.to_pickle(f'collect_data/df_live_game_matchup_{date_today}.pkl')
-
-# fetch today's odds
-print(f"{fetch_print_prefix}fetch today's odds")
-import odds_data.odds_hits
-df_odds_hits = odds_data.odds_hits.fetch_df_hits_odd_today()
-print(f'df_odds_hits {df_odds_hits}')
-df_odds_hits.to_pickle(f"odds_data/df_odds_hits_{date_today}.pkl")
-df_odds_hits.to_pickle(f"odds_data/df_odds_hits_{date_today_detail}.pkl")

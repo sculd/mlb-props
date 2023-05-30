@@ -63,7 +63,8 @@ def get_side_matchup(game_id, side, force_fetch = False):
         if len(side_batter_stats) == 0:
             #print(f'{side} batter {side_batter} stat is empty')
             return None
-        
+
+        seasons = set([stat["season"] for stat in side_batter_stats])
         for historical_batter_stat in side_batter_stats:
             if historical_batter_stat["season"] == str(valid_historical_season):
                 season_batter_stats = historical_batter_stat["stats"]
@@ -91,7 +92,7 @@ def get_side_matchup(game_id, side, force_fetch = False):
     side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
     
     if len(side_team_batting_stats) < 1:
-        print(f'{side} side_team_batting_stats is empty for game')
+        print(f'{side} side_team_batting_stats is empty for game {game_id}, available seasons: {seasons}')
         return None
     
     opposing_pitcher_name, opposing_pitcher_id = game[f"{opposite_side}_probable_pitcher"], player_name_to_id(game[f"{opposite_side}_probable_pitcher"])
