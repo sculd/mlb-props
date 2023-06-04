@@ -25,8 +25,7 @@ def player_name_to_id(player_name):
     else:
         return ""
 
-# side for home or away
-def get_side_matchup(game_id, side, force_fetch = False):
+def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
     game_boxscore = get_boxscore_data(game_id)
     if game_boxscore is None:
         print(f'Failed to get box score for game_id: {game_id}')
@@ -36,115 +35,113 @@ def get_side_matchup(game_id, side, force_fetch = False):
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
         return None
-    
-    opposite_side = "away" if side == "home" else "home"
+
     all_side_players = game_boxscore[side]["players"]
-    
-    side_players_list = []
-    for home_player in all_side_players:
-        home_player = all_side_players[home_player]
-        home_player_name, home_player_id = home_player["person"]["fullName"], home_player["person"]["id"]
-        side_players_list.append({"name":home_player_name, "id":home_player_id})
 
-    side_players_dataframe = pd.DataFrame(side_players_list)
-    side_batting_lineup_ids = game_boxscore[side]["battingOrder"]
-    side_batters = side_players_dataframe[side_players_dataframe["id"].isin(side_batting_lineup_ids)]
-    valid_historical_season = int(game["game_date"][0:4]) - 1
-    side_batter_stats_list = []
-
-    for side_batter in side_batters["id"]:
-        side_batter_stats_data = get_player_stat_data(side_batter, group="hitting", force_fetch = force_fetch)
-        if side_batter_stats_data is not None:
-            side_batter_stats = side_batter_stats_data["stats"]
-        else:
-            print(f'Error while getting {side} batter {side_batter} stat')
-            return None
-
-        if len(side_batter_stats) == 0:
-            #print(f'{side} batter {side_batter} stat is empty')
-            return None
-
-        seasons = set([stat["season"] for stat in side_batter_stats])
-        for historical_batter_stat in side_batter_stats:
-            if historical_batter_stat["season"] == str(valid_historical_season):
-                season_batter_stats = historical_batter_stat["stats"]
-                season_batter_stats["name"] = side_batters["name"][side_batters["id"] == side_batter].iloc[0]
-                season_batter_stats["id"] = side_batters["id"][side_batters["id"] == side_batter].iloc[0]
-                
-                side_batter_game_day_stats = all_side_players[f"ID{side_batter}"]["stats"]["batting"]
-                
-                if side_batter_game_day_stats["hits"] < 1:
-                    hit_recorded = 0
-                elif side_batter_game_day_stats["hits"] >= 1:
-                    hit_recorded = 1
-                    
-                season_batter_stats["hit_recorded"] = hit_recorded
-
-                if side_batter_game_day_stats["homeRuns"] < 1:
-                    hr_recorded = 0
-                elif side_batter_game_day_stats["homeRuns"] >= 1:
-                    hr_recorded = 1
-
-                season_batter_stats["homeRuns_recorded"] = hr_recorded
-
-                side_batter_stats_list.append(season_batter_stats)
-            
-    side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
-    
-    if len(side_team_batting_stats) < 1:
-        print(f'{side} side_team_batting_stats is empty for game {game_id}, available seasons: {seasons}')
+    batter_stats_data = get_player_stat_data(batter_player_id, group="hitting", force_fetch=force_fetch)
+    if batter_stats_data is None:
+        print(f'Error while getting {side} batter {batter_player_id} stat')
         return None
-    
-    opposing_pitcher_name, opposing_pitcher_id = game[f"{opposite_side}_probable_pitcher"], player_name_to_id(game[f"{opposite_side}_probable_pitcher"])
-    
-    side_batting_matchup = None
-    if type(opposing_pitcher_id) != type(np.int64()):
-        print(f'opposing_pitcher_id {opposing_pitcher_id} is not of int64 type')
-        pass
-    else:
-        opposing_pitcher_stats_data = get_player_stat_data(opposing_pitcher_id, group="pitching", force_fetch = force_fetch)
-        if opposing_pitcher_stats_data is not None:            
-            opposing_pitcher_stats = pd.json_normalize(opposing_pitcher_stats_data["stats"], max_level = 0)
-        else:
-            print(f'Error while getting {side} opssosing pitcher {opposing_pitcher_id} stat')
-            return None
-        
-        # If there is just no data from the API for this player
-        if len(opposing_pitcher_stats) == 0:
-            #print(f'{side} opposing pitcher {opposing_pitcher_id} stat is empty')
-            pass
-        else:
-            valid_opposing_pitcher_season_stats = opposing_pitcher_stats[opposing_pitcher_stats["season"] == str(valid_historical_season)]["stats"].drop_duplicates(keep = "last")
-        
-            # If there is no historical data for last season
-            if len(valid_opposing_pitcher_season_stats) == 0:
-                print(f'{side} valid opposing pitcher {opposing_pitcher_id} season {valid_historical_season} stat is empty')
-                pass
-            else:
-                opposing_pitcher_season_stats = valid_opposing_pitcher_season_stats.iloc[0]
-                opposing_pitcher_season_stats["name"] = opposing_pitcher_name
-                opposing_pitcher_season_stats["id"] = opposing_pitcher_id
-                
-                opposing_pitcher_stats_dataframe = pd.DataFrame([opposing_pitcher_season_stats])
-                opposing_pitcher_stats = pd.concat([opposing_pitcher_stats_dataframe]*len(side_team_batting_stats))
-                side_batting_matchup = pd.concat([opposing_pitcher_stats.reset_index(drop = True).add_prefix("pitching_"), side_team_batting_stats.reset_index(drop = True).add_prefix("batting_")], axis = 1)
-            
-                # =============================================================================
-                # End of calculating the side for the batters
-                # =============================================================================
 
-    return side_batting_matchup
+    side_batter_stats = batter_stats_data["stats"]
+    if len(side_batter_stats) == 0:
+        # print(f'{side} batter {side_batter} stat is empty')
+        return None
 
-# home + away plus misc data like temperature
-def get_game_matchup(game_id):
+    season_last_year = int(game["game_date"][0:4]) - 1
+    batter_player_name = df_player_team_positions[df_player_team_positions.player_id == batter_player_id].iloc[0].player_name
+
+    season_batter_stats = None
+    for historical_batter_stat in side_batter_stats:
+        if historical_batter_stat["season"] == str(season_last_year):
+            season_batter_stats = historical_batter_stat["stats"]
+            season_batter_stats["name"] = batter_player_name
+            season_batter_stats["id"] = batter_player_id
+
+            side_batter_game_day_stats = all_side_players[f"ID{batter_player_id}"]["stats"]["batting"]
+
+            season_batter_stats["hit_recorded"] = side_batter_game_day_stats["hits"] >= 1
+            season_batter_stats["homeRuns_recorded"] = side_batter_game_day_stats["homeRuns"] >= 1
+
+    return season_batter_stats
+
+
+def get_side_pitcher_matchup(game_id, side, force_fetch=False):
     game = _schedules[game_id]
-    if game["venue_name"] not in park_venues:
-        # likely a training game
+    if game is None:
+        print(f'Failed to get schedule detail for game_id: {game_id}')
         return None
 
+    pitcher_name = game[f"{side}_probable_pitcher"]
+    pitcher_id = player_name_to_id(pitcher_name)
+    if type(pitcher_id) != type(np.int64()):
+        print(f'pitcher_id {pitcher_id} can not be found for pitcher {pitcher_name}')
+        return None
+
+    pitcher_stats_data = get_player_stat_data(pitcher_id, group="pitching", force_fetch=force_fetch)
+    if pitcher_stats_data is None:
+        print(f'Error while getting {side} pitcher {pitcher_id} stat')
+        return None
+
+    pitcher_stats_stats = pitcher_stats_data["stats"]
+    season_last_year = int(game["game_date"][0:4]) - 1
+    season_pitcher_stats = None
+    for historical_pitcher_stat in pitcher_stats_stats:
+        if historical_pitcher_stat["season"] == str(season_last_year):
+            season_pitcher_stats = historical_pitcher_stat["stats"]
+            season_pitcher_stats["name"] = pitcher_name
+            season_pitcher_stats["id"] = pitcher_id
+
+    return season_pitcher_stats
+
+# side for home or away
+def get_side_matchup(game_id, side, force_fetch = False):
     game_boxscore = get_boxscore_data(game_id)
     if game_boxscore is None:
         print(f'Failed to get box score for game_id: {game_id}')
+        return None
+
+    all_players = game_boxscore[side]["players"]
+    side_players_list = []
+    for player in all_players:
+        player = all_players[player]
+        player_name, player_id = player["person"]["fullName"], player["person"]["id"]
+        side_players_list.append({"name":player_name, "id":player_id})
+
+    side_players_dataframe = pd.DataFrame(side_players_list)
+    side_batting_lineup_ids = game_boxscore[side]["battingOrder"]
+    print(f'side_batting_lineup_ids {len(side_batting_lineup_ids)}')
+
+    side_batters = side_players_dataframe[side_players_dataframe["id"].isin(side_batting_lineup_ids)]
+    side_batter_stats_list = []
+    seasons_all_player = set()
+    for side_batter_id in side_batters["id"]:
+        side_batter_matchup = get_side_batter_matchup(game_id, side, side_batter_id, force_fetch=force_fetch)
+        if side_batter_matchup is None:
+            continue
+        side_batter_stats_list.append(side_batter_matchup)
+
+    df_side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
+    if len(df_side_team_batting_stats) < 1:
+        print(f'{side} side_team_batting_stats is empty for game {game_id}, available seasons: {seasons_all_player}')
+        return None
+
+    opposite_side = "away" if side == "home" else "home"
+    opposing_pitcher_stats = get_side_pitcher_matchup(game_id, opposite_side, force_fetch=force_fetch)
+    if opposing_pitcher_stats is None:
+        return None
+
+    df_opposing_pitcher_stats_filled = pd.concat([pd.DataFrame([opposing_pitcher_stats])] * len(df_side_team_batting_stats))
+    df_side_matchup = pd.concat([df_opposing_pitcher_stats_filled.reset_index(drop=True).add_prefix("pitching_"),
+                                 df_side_team_batting_stats.reset_index(drop=True).add_prefix("batting_")], axis=1)
+
+    return df_side_matchup
+
+# home + away plus misc data like temperature
+def get_df_game_matchup_for_game_id(game_id):
+    game = _schedules[game_id]
+    if game["venue_name"] not in park_venues:
+        # likely a training game
         return None
 
     home_batting_matchup = get_side_matchup(game_id, "home")
@@ -153,9 +150,7 @@ def get_game_matchup(game_id):
     home_batting_matchup = home_batting_matchup if home_batting_matchup is not None else []
     away_batting_matchup = away_batting_matchup if away_batting_matchup is not None else []
 
-    all_home_players = game_boxscore["home"]["players"]
-    all_away_players = game_boxscore["away"]["players"]
-
+    game_matchup = None
     if (len(home_batting_matchup) == 0) and (len(away_batting_matchup) == 0):
         #print(f'None both home_batting_matchup and away_batting_matchup for game_id {game_id}')
         return None
@@ -187,8 +182,8 @@ def ingest_matchup_batch(game_ids, force_fetch = False):
     for i, game_id in enumerate(game_ids):
         if i % 100 == 0:
             print(f'{i} of {game_ids[:2]} total {len(game_ids)}')
-        home_batting_matchup = get_side_matchup(game_id, "home", force_fetch = force_fetch)
-        away_batting_matchup = get_side_matchup(game_id, "away", force_fetch = force_fetch)
+        _ = get_side_matchup(game_id, "home", force_fetch = force_fetch)
+        _ = get_side_matchup(game_id, "away", force_fetch = force_fetch)
 
 # injest to fill up the cache without constructing a df
 def ingest_matchup_year(year, force_fetch = False):
@@ -233,7 +228,7 @@ def get_df_game_matchup(game_id_list):
             #print(f'None both home_batting_matchup and away_batting_matchup for game_id {game_id}')
             cnt_null_matchups += 1
     
-        game_matchup = get_game_matchup(game_id)
+        game_matchup = get_df_game_matchup_for_game_id(game_id)
         if game_matchup is None:
             continue
         
