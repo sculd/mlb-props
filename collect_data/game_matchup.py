@@ -25,18 +25,12 @@ def player_name_to_id(player_name):
     else:
         return ""
 
-def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
-    game_boxscore = get_boxscore_data(game_id)
-    if game_boxscore is None:
-        print(f'Failed to get box score for game_id: {game_id}')
-        return None
 
+def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
     game = _schedules[game_id]
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
         return None
-
-    all_side_players = game_boxscore[side]["players"]
 
     batter_stats_data = get_player_stat_data(batter_player_id, group="hitting", force_fetch=force_fetch)
     if batter_stats_data is None:
@@ -51,6 +45,12 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
     season_last_year = int(game["game_date"][0:4]) - 1
     batter_player_name = df_player_team_positions[df_player_team_positions.player_id == batter_player_id].iloc[0].player_name
 
+    game_boxscore = get_boxscore_data(game_id)
+    if game_boxscore is None:
+        print(f'Failed to get box score for game_id: {game_id}')
+        return None
+    players_boxscore = game_boxscore[side]["players"]
+
     season_batter_stats = None
     for historical_batter_stat in side_batter_stats:
         if historical_batter_stat["season"] == str(season_last_year):
@@ -58,15 +58,18 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
             season_batter_stats["name"] = batter_player_name
             season_batter_stats["id"] = batter_player_id
 
-            side_batter_game_day_stats = all_side_players[f"ID{batter_player_id}"]["stats"]["batting"]
+            season_batter_stats["runs_per_game"] = 1. * season_batter_stats["runs"] / season_batter_stats["gamesPlayed"]
+            season_batter_stats["strikeOuts_per_game"] = 1. * season_batter_stats["strikeOuts"] / season_batter_stats["gamesPlayed"]
+            season_batter_stats["hits_per_game"] = 1. * season_batter_stats["hits"] / season_batter_stats["gamesPlayed"]
 
+            side_batter_game_day_stats = players_boxscore[f"ID{batter_player_id}"]["stats"]["batting"]
             season_batter_stats["hit_recorded"] = side_batter_game_day_stats["hits"] >= 1
             season_batter_stats["homeRuns_recorded"] = side_batter_game_day_stats["homeRuns"] >= 1
 
     return season_batter_stats
 
 
-def get_side_pitcher_matchup(game_id, side, force_fetch=False):
+def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
     game = _schedules[game_id]
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
@@ -91,6 +94,10 @@ def get_side_pitcher_matchup(game_id, side, force_fetch=False):
             season_pitcher_stats = historical_pitcher_stat["stats"]
             season_pitcher_stats["name"] = pitcher_name
             season_pitcher_stats["id"] = pitcher_id
+
+            season_pitcher_stats["runs_per_game"] = 1. * season_pitcher_stats["runs"] / season_pitcher_stats["gamesPlayed"]
+            season_pitcher_stats["strikeOuts_per_game"] = 1. * season_pitcher_stats["strikeOuts"] / season_pitcher_stats["gamesPlayed"]
+            season_pitcher_stats["hits_per_game"] = 1. * season_pitcher_stats["hits"] / season_pitcher_stats["gamesPlayed"]
 
     return season_pitcher_stats
 
@@ -127,7 +134,7 @@ def get_side_matchup(game_id, side, force_fetch = False):
         return None
 
     opposite_side = "away" if side == "home" else "home"
-    opposing_pitcher_stats = get_side_pitcher_matchup(game_id, opposite_side, force_fetch=force_fetch)
+    opposing_pitcher_stats = get_side_pitcher_matchup_for_game(game_id, opposite_side, force_fetch=force_fetch)
     if opposing_pitcher_stats is None:
         return None
 

@@ -1,7 +1,7 @@
 
 
 import collect_data.game_matchup
-df_game_matchup_updated = collect_data.game_matchup.get_game_matchup(717951)
+df_game_matchup_updated = collect_data.game_matchup.get_df_game_matchup_for_game_id(717951)
 
 
 print(df_game_matchup_updated)
