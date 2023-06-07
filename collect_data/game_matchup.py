@@ -42,8 +42,14 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
         # print(f'{side} batter {side_batter} stat is empty')
         return None
 
-    season_last_year = int(game["game_date"][0:4]) - 1
-    batter_player_name = df_player_team_positions[df_player_team_positions.player_id == batter_player_id].iloc[0].player_name
+    season_this_year_str = game["game_date"][0:4]
+    season_last_year_str = str(int(game["game_date"][0:4]) - 1)
+    df_better = df_player_team_positions[df_player_team_positions.player_id == batter_player_id]
+    if len(df_better) == 0:
+        print(f'better name can not be found for {batter_player_id}')
+        return None
+
+    batter_player_name = df_better.iloc[0].player_name
 
     game_boxscore = get_boxscore_data(game_id)
     if game_boxscore is None:
@@ -51,22 +57,31 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
         return None
     players_boxscore = game_boxscore[side]["players"]
 
-    season_batter_stats = None
-    for historical_batter_stat in side_batter_stats:
-        if historical_batter_stat["season"] == str(season_last_year):
-            season_batter_stats = historical_batter_stat["stats"]
-            season_batter_stats["name"] = batter_player_name
-            season_batter_stats["id"] = batter_player_id
+    season_batter_stats = {}
+    side_batter_game_day_stats = players_boxscore[f"ID{batter_player_id}"]["stats"]["batting"]
+    season_batter_stats["name"] = batter_player_name
+    season_batter_stats["id"] = batter_player_id
+    # learning targets
+    season_batter_stats["hit_recorded"] = side_batter_game_day_stats["hits"] >= 1
+    season_batter_stats["homeRuns_recorded"] = side_batter_game_day_stats["homeRuns"] >= 1
 
+    this_year_stat_found, last_year_stat_found = False, False
+    for historical_batter_stat in side_batter_stats:
+        if historical_batter_stat["season"] == season_this_year_str:
+            stats = historical_batter_stat["stats"]
+            season_batter_stats["cur_season_runs_per_game"] = 1. * stats["runs"] / stats["gamesPlayed"]
+            season_batter_stats["cur_season_strikeOuts_per_game"] = 1. * stats["strikeOuts"] / stats["gamesPlayed"]
+            season_batter_stats["cur_season_hits_per_game"] = 1. * stats["hits"] / stats["gamesPlayed"]
+            this_year_stat_found = True
+
+        if historical_batter_stat["season"] == season_last_year_str:
+            season_batter_stats.update(historical_batter_stat["stats"])
             season_batter_stats["runs_per_game"] = 1. * season_batter_stats["runs"] / season_batter_stats["gamesPlayed"]
             season_batter_stats["strikeOuts_per_game"] = 1. * season_batter_stats["strikeOuts"] / season_batter_stats["gamesPlayed"]
             season_batter_stats["hits_per_game"] = 1. * season_batter_stats["hits"] / season_batter_stats["gamesPlayed"]
+            last_year_stat_found = True
 
-            side_batter_game_day_stats = players_boxscore[f"ID{batter_player_id}"]["stats"]["batting"]
-            season_batter_stats["hit_recorded"] = side_batter_game_day_stats["hits"] >= 1
-            season_batter_stats["homeRuns_recorded"] = side_batter_game_day_stats["homeRuns"] >= 1
-
-    return season_batter_stats
+    return season_batter_stats if this_year_stat_found and last_year_stat_found else None
 
 
 def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
@@ -87,22 +102,32 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
         return None
 
     pitcher_stats_stats = pitcher_stats_data["stats"]
-    season_last_year = int(game["game_date"][0:4]) - 1
-    season_pitcher_stats = None
-    for historical_pitcher_stat in pitcher_stats_stats:
-        if historical_pitcher_stat["season"] == str(season_last_year):
-            season_pitcher_stats = historical_pitcher_stat["stats"]
-            season_pitcher_stats["name"] = pitcher_name
-            season_pitcher_stats["id"] = pitcher_id
+    season_this_year_str = game["game_date"][0:4]
+    season_last_year_str = str(int(game["game_date"][0:4]) - 1)
+    season_pitcher_stats = {}
+    season_pitcher_stats["name"] = pitcher_name
+    season_pitcher_stats["id"] = pitcher_id
 
+    this_year_stat_found, last_year_stat_found = False, False
+    for historical_pitcher_stat in pitcher_stats_stats:
+        if historical_pitcher_stat["season"] == season_this_year_str:
+            stats = historical_pitcher_stat["stats"]
+            season_pitcher_stats["cur_season_runs_per_game"] = 1. * stats["runs"] / stats["gamesPlayed"]
+            season_pitcher_stats["cur_season_strikeOuts_per_game"] = 1. * stats["strikeOuts"] / stats["gamesPlayed"]
+            season_pitcher_stats["cur_season_hits_per_game"] = 1. * stats["hits"] / stats["gamesPlayed"]
+            this_year_stat_found = True
+
+        if historical_pitcher_stat["season"] == season_last_year_str:
+            season_pitcher_stats.update(historical_pitcher_stat["stats"])
             season_pitcher_stats["runs_per_game"] = 1. * season_pitcher_stats["runs"] / season_pitcher_stats["gamesPlayed"]
             season_pitcher_stats["strikeOuts_per_game"] = 1. * season_pitcher_stats["strikeOuts"] / season_pitcher_stats["gamesPlayed"]
             season_pitcher_stats["hits_per_game"] = 1. * season_pitcher_stats["hits"] / season_pitcher_stats["gamesPlayed"]
+            last_year_stat_found = True
 
-    return season_pitcher_stats
+    return season_pitcher_stats if this_year_stat_found and last_year_stat_found else None
 
 # side for home or away
-def get_side_matchup(game_id, side, force_fetch = False):
+def get_df_side_matchup(game_id, side, force_fetch = False):
     game_boxscore = get_boxscore_data(game_id)
     if game_boxscore is None:
         print(f'Failed to get box score for game_id: {game_id}')
@@ -117,11 +142,9 @@ def get_side_matchup(game_id, side, force_fetch = False):
 
     side_players_dataframe = pd.DataFrame(side_players_list)
     side_batting_lineup_ids = game_boxscore[side]["battingOrder"]
-    print(f'side_batting_lineup_ids {len(side_batting_lineup_ids)}')
 
     side_batters = side_players_dataframe[side_players_dataframe["id"].isin(side_batting_lineup_ids)]
     side_batter_stats_list = []
-    seasons_all_player = set()
     for side_batter_id in side_batters["id"]:
         side_batter_matchup = get_side_batter_matchup(game_id, side, side_batter_id, force_fetch=force_fetch)
         if side_batter_matchup is None:
@@ -130,7 +153,7 @@ def get_side_matchup(game_id, side, force_fetch = False):
 
     df_side_team_batting_stats = pd.DataFrame(side_batter_stats_list).drop_duplicates(subset = "name", keep ="last")
     if len(df_side_team_batting_stats) < 1:
-        print(f'{side} side_team_batting_stats is empty for game {game_id}, available seasons: {seasons_all_player}')
+        print(f'{side} side_team_batting_stats is empty for game {game_id}')
         return None
 
     opposite_side = "away" if side == "home" else "home"
@@ -151,8 +174,8 @@ def get_df_game_matchup_for_game_id(game_id):
         # likely a training game
         return None
 
-    home_batting_matchup = get_side_matchup(game_id, "home")
-    away_batting_matchup = get_side_matchup(game_id, "away")
+    home_batting_matchup = get_df_side_matchup(game_id, "home")
+    away_batting_matchup = get_df_side_matchup(game_id, "away")
     
     home_batting_matchup = home_batting_matchup if home_batting_matchup is not None else []
     away_batting_matchup = away_batting_matchup if away_batting_matchup is not None else []
@@ -189,8 +212,8 @@ def ingest_matchup_batch(game_ids, force_fetch = False):
     for i, game_id in enumerate(game_ids):
         if i % 100 == 0:
             print(f'{i} of {game_ids[:2]} total {len(game_ids)}')
-        _ = get_side_matchup(game_id, "home", force_fetch = force_fetch)
-        _ = get_side_matchup(game_id, "away", force_fetch = force_fetch)
+        _ = get_df_side_matchup(game_id, "home", force_fetch = force_fetch)
+        _ = get_df_side_matchup(game_id, "away", force_fetch = force_fetch)
 
 # injest to fill up the cache without constructing a df
 def ingest_matchup_year(year, force_fetch = False):
@@ -208,11 +231,80 @@ def ingest_matchup_year(year, force_fetch = False):
     for th in ths:
         th.join()
 
-    print(f'done ingest_matchup_year year: {year}')    
+    print(f'done ingest_matchup_year year: {year}')
+
+
+def get_df_game_matchup_batch(game_id_list, get_df_game_matchup_batch_result):
+    df_game_matchups = []
+    cnt_null_matchups = 0
+    for i, game_id in enumerate(game_id_list):
+        if i % 1000 == 0:
+            print(f'processing {i} out of {len(game_id_list)} game_id {game_id}, cnt_null_matchups: {cnt_null_matchups}')
+
+        game = _schedules[game_id]
+        if game["venue_name"] not in park_venues:
+            # likely a training game
+            continue
+
+        game_boxscore = get_boxscore_data(game_id)
+        if game_boxscore is None:
+            print(f'Failed to get box score for game_id: {game_id}')
+            continue
+
+        home_batting_matchup = get_df_side_matchup(game_id, "home")
+        away_batting_matchup = get_df_side_matchup(game_id, "away")
+
+        if home_batting_matchup is None and away_batting_matchup is None:
+            #print(f'None both home_batting_matchup and away_batting_matchup for game_id {game_id}')
+            cnt_null_matchups += 1
+
+        df_game_matchup = get_df_game_matchup_for_game_id(game_id)
+        if df_game_matchup is None:
+            continue
+
+        df_game_matchups.append(df_game_matchup)
+
+    print(f'cnt_null_matchups: {cnt_null_matchups}')
+
+    if len(df_game_matchups) == 0:
+        return None
+
+    df_game_matchup_batch = pd.concat(df_game_matchups).reset_index(drop=True) # [Hit_Real_Features].dropna()
+    df_game_matchup_batch['game_date'] = pd.to_datetime(df_game_matchup_batch['game_date'])
+    df_game_matchup_batch['game_datetime'] = pd.to_datetime(df_game_matchup_batch['game_datetime'])
+    df_game_matchup_batch['game_year'] = df_game_matchup_batch.game_date.dt.to_period('y')
+
+    get_df_game_matchup_batch_result.append(df_game_matchup_batch)
+    return df_game_matchup_batch
+
+def get_df_game_matchup_(game_id_list):
+    print(f'get_df_game_matchup_concurrent game_ids: {len(game_id_list)}')
+    global _boxscores
+    global _boxscores_lock
+
+    n_ths = 8
+    game_id_list_splits = np.array_split(game_id_list, n_ths)
+    ths = []
+    df_game_matchup_batch_result = [[] for _ in range(n_ths)]
+    # single thread is too slong (1+ hour per year) and the bottlenecked in network
+    for i, game_id_list_split in enumerate(game_id_list_splits):
+        print(f'th {i}')
+        th = threading.Thread(target=get_df_game_matchup_batch, args=(game_id_list_split, df_game_matchup_batch_result[i]))
+        th.start()
+        ths.append(th)
+
+    for th in ths:
+        th.join()
+
+    print(f'done get_df_game_matchup_concurrent {len(game_id_list)}')
+    dfs = [dflisted[0] for dflisted in df_game_matchup_batch_result if len(dflisted) > 0]
+    if len(dfs) == 0:
+        return None
+    return pd.concat(dfs)
 
 # this one reads up the cached data to construct a df
 def get_df_game_matchup(game_id_list):
-    game_matchups = []
+    df_game_matchups = []
     cnt_null_matchups = 0
     for i, game_id in enumerate(game_id_list):
         if i % 1000 == 0:
@@ -228,22 +320,22 @@ def get_df_game_matchup(game_id_list):
             print(f'Failed to get box score for game_id: {game_id}')
             continue
     
-        home_batting_matchup = get_side_matchup(game_id, "home")
-        away_batting_matchup = get_side_matchup(game_id, "away")
+        home_batting_matchup = get_df_side_matchup(game_id, "home")
+        away_batting_matchup = get_df_side_matchup(game_id, "away")
         
         if home_batting_matchup is None and away_batting_matchup is None:
             #print(f'None both home_batting_matchup and away_batting_matchup for game_id {game_id}')
             cnt_null_matchups += 1
     
-        game_matchup = get_df_game_matchup_for_game_id(game_id)
-        if game_matchup is None:
+        df_game_matchup = get_df_game_matchup_for_game_id(game_id)
+        if df_game_matchup is None:
             continue
         
-        game_matchups.append(game_matchup)
+        df_game_matchups.append(df_game_matchup)
     
     print(f'cnt_null_matchups: {cnt_null_matchups}')
     
-    df_game_matchup = pd.concat(game_matchups).reset_index(drop=True) # [Hit_Real_Features].dropna()
+    df_game_matchup = pd.concat(df_game_matchups).reset_index(drop=True) # [Hit_Real_Features].dropna()
     df_game_matchup['game_date'] = pd.to_datetime(df_game_matchup['game_date'])
     df_game_matchup['game_datetime'] = pd.to_datetime(df_game_matchup['game_datetime'])
     df_game_matchup['game_year'] = df_game_matchup.game_date.dt.to_period('y')
