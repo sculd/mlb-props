@@ -31,9 +31,16 @@ Features = ['pitching_gamesPlayed', 'pitching_gamesStarted', 'pitching_groundOut
 #Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]] = Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]].replace([".---", "-.--"], np.nan).astype(float)
 
 features = \
-    ["pitching_gamesPlayed", "pitching_runs", "pitching_strikeOuts", "pitching_hits", "pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs",  "batting_strikeOuts",  "batting_hits",  "batting_rbi", "batting_id", "pitching_name", "batting_hit_recorded"] + \
+    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
+    ["pitching_id", "batting_name"] + \
+    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
+    ["batting_rbi", "batting_id", "pitching_name", "batting_hit_recorded"] + \
+    ["pitching_cur_season_runs_per_game", "pitching_cur_season_strikeOuts_per_game", "pitching_cur_season_hits_per_game"] + \
+    ["batting_cur_season_runs_per_game",  "batting_cur_season_strikeOuts_per_game",  "batting_cur_season_hits_per_game"] + \
     ["temp", "game_venue", 'game_date', "game_year"]
+
+#    ["pitching_runs", "pitching_strikeOuts", "pitching_hits"] + \
+#    ["batting_runs",  "batting_strikeOuts",  "batting_hits"] + \
 
 Hit_Real_Features = features
 
