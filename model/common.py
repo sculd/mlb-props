@@ -57,10 +57,12 @@ Real_Features = \
     ["temp", "game_id", "game_venue","game_date"]
 
 model_base_dir = 'model'
-#hit_save_to_file_string = f"{datetime.today().strftime('%Y%m%d')}_" + "batter_hit_lr_model"
-model_file_name = f"{model_base_dir}/batter_hit_lr_model"
+#hit_save_to_file_string = f"{datetime.today().strftime('%Y%m%d')}_" + "batter_hit_regression_model"
+model_file_name = f"{model_base_dir}/batter_hit_regression_model"
 
 def odds_calculator(probability):
+    if probability >= 1:
+        return -10000
     return round(-100 / ((1/probability)-1))
 
 def juiced_odds_calculator(probability):
