@@ -19,13 +19,8 @@ My fork [here|https://github.com/sculd/mlb-props].
 import pycaret
 import pandas as pd
 import numpy as np
-import sqlalchemy
-import mysql.connector
-
 from pycaret import classification
-from pycaret.classification import plot_model
 from datetime import datetime
-import importlib
 import model.common
 from static_data.load_static_data import *
 ```
@@ -34,14 +29,6 @@ from static_data.load_static_data import *
 ```python
 collect_data_Base_dir = 'collect_data'
 df_game_matchup_total = pd.read_pickle(f'{collect_data_Base_dir}/df_game_matchup_total.pkl')
-print(len(df_game_matchup_total))
-```
-
-    322963
-
-
-
-```python
 test_data = df_game_matchup_total[(df_game_matchup_total.game_date > "2022-12-01")][model.common.features]
 ```
 
