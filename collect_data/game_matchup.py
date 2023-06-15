@@ -62,8 +62,8 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
     season_batter_stats["name"] = batter_player_name
     season_batter_stats["id"] = batter_player_id
     # learning targets
-    season_batter_stats["hit_recorded"] = side_batter_game_day_stats["hits"] >= 1
-    season_batter_stats["homeRuns_recorded"] = side_batter_game_day_stats["homeRuns"] >= 1
+    season_batter_stats["hit_recorded"] = 1 if side_batter_game_day_stats["hits"] >= 1 else 0
+    season_batter_stats["homeRuns_recorded"] = 1 if side_batter_game_day_stats["homeRuns"] >= 1 else 0
 
     this_year_stat_found, last_year_stat_found = False, False
     for historical_batter_stat in side_batter_stats:
