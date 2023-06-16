@@ -65,6 +65,11 @@ def odds_calculator(probability):
         return -10000
     return round(-100 / ((1/probability)-1))
 
+def probability_to_odds(probability):
+    if probability >= 1:
+        return -10000
+    return round(-100 / ((1/probability)-1))
+
 def juiced_odds_calculator(probability):
     return odds_calculator(probabiliby) - 15
 
