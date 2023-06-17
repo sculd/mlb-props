@@ -3,4 +3,3 @@ meteostat
 pandas
 numpy
 MLB-StatsAPI
-pickle
