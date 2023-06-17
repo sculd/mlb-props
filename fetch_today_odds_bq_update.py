@@ -11,7 +11,7 @@ fetch_print_prefix = "\n### "
 gs_bucket_name = "major-league-baseball"
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
-bq_table_id = "odds_hit_recorded_copy"
+bq_table_id = "odds_hit_recorded"
 
 # fetch today's odds
 print(f"{fetch_print_prefix}fetch today's odds")
