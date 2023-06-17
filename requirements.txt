@@ -2,5 +2,5 @@ pycaret
 meteostat
 pandas
 numpy
-statsapi
+MLB-StatsAPI
 pickle
