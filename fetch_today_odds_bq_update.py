@@ -3,7 +3,8 @@ import datetime, os, json
 from google.cloud import bigquery
 from google.cloud import storage
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.getcwd(), 'credential.json')
+if os.path.exists('credential.json'):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.getcwd(), 'credential.json')
 
 fetch_print_prefix = "\n### "
 
