@@ -1,5 +1,10 @@
 # mlb sports betting forecasting model
 
+```
+jupyter nbconvert --execute --to markdown readme.ipynb
+```
+is to be run to convert this notebook to a markdown file.
+
 ## Forked from quantgalore.substack.com
 
 My fork [here|https://github.com/sculd/mlb-props].
@@ -13,6 +18,8 @@ My fork [here|https://github.com/sculd/mlb-props].
 * add this line `0 8 * * * /home/junlim/projects/mlb-props/daily_run.sh` to crontab to run it every 8am daily.
 * add this line `0 10 * * * /home/junlim/projects/mlb-props/daily_live_run.sh` to crontab to run it every 10am daily.
 
+
+The odds fetch is hosted in the gcp vm (sandbox(2)), and updated to `trading-290017.major_league_baseball.odds_hit_recorded` table.
 
 
 ```python

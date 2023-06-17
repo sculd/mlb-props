@@ -2,3 +2,4 @@
 **/__pycache__/**
 *.pyc
 collect_data/*.pkl
+credential.json
