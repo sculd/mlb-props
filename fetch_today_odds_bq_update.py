@@ -20,24 +20,27 @@ print(f'df_odds_hits {df_odds_hits}')
 
 # write it as jsonfied data
 date_today = datetime.datetime.today().strftime("%Y-%m-%d")
-json_file_name = f'odds_hit_recorded_{date_today}.txt'
+json_file_name = f'odds_data/odds_hit_recorded_{date_today}.txt'
 with open(json_file_name, 'w') as jf:
     for _, row in df_odds_hits.iterrows():
         jf.write(json.dumps(row.to_dict()) + '\n')
 
 # uoload the jsonfied data to gcs
 storage_client = storage.Client()
-if not storage.Blob(bucket=storage_client.bucket("major-league-baseball"), name=json_file_name).exists(storage_client):
-    bucket = storage_client.bucket(gs_bucket_name)
-    blob = bucket.blob(json_file_name)
+if storage.Blob(bucket=storage_client.bucket(gs_bucket_name), name=json_file_name).exists(storage_client):
+    print(f'{json_file_name} already present in the bucket {gs_bucket_name} thus not proceeding further')
+    exit()
 
-    generation_match_precondition = 0
+bucket = storage_client.bucket(gs_bucket_name)
+blob = bucket.blob(json_file_name)
 
-    blob.upload_from_filename(json_file_name, if_generation_match=generation_match_precondition)
+generation_match_precondition = 0
 
-    print(
-        f"File {json_file_name} uploaded to {json_file_name}."
-    )
+blob.upload_from_filename(json_file_name, if_generation_match=generation_match_precondition)
+
+print(
+    f"File {json_file_name} uploaded to {json_file_name}."
+)
 
 # load the jsonfied data to bq
 job_config = bigquery.LoadJobConfig(
