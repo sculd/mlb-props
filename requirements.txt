@@ -3,3 +3,5 @@ meteostat
 pandas
 numpy
 MLB-StatsAPI
+google-cloud-bigquery
+google-cloud-storage
