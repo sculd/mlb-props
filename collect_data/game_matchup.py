@@ -26,7 +26,7 @@ def player_name_to_id(player_name):
         return ""
 
 
-def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
+def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_stats_batting, player_boxscore_season_stats_batting, force_fetch=False):
     game = _schedules[game_id]
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
@@ -42,7 +42,6 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
         # print(f'{side} batter {side_batter} stat is empty')
         return None
 
-    season_this_year_str = game["game_date"][0:4]
     season_last_year_str = str(int(game["game_date"][0:4]) - 1)
     df_better = df_player_team_positions[df_player_team_positions.player_id == batter_player_id]
     if len(df_better) == 0:
@@ -51,29 +50,22 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
 
     batter_player_name = df_better.iloc[0].player_name
 
-    game_boxscore = get_boxscore_data(game_id)
-    if game_boxscore is None:
-        print(f'Failed to get box score for game_id: {game_id}')
-        return None
-    players_boxscore = game_boxscore[side]["players"]
-
     season_batter_stats = {}
-    side_batter_game_day_stats = players_boxscore[f"ID{batter_player_id}"]["stats"]["batting"]
     season_batter_stats["name"] = batter_player_name
     season_batter_stats["id"] = batter_player_id
     # learning targets
-    season_batter_stats["hit_recorded"] = 1 if side_batter_game_day_stats["hits"] >= 1 else 0
-    season_batter_stats["homeRuns_recorded"] = 1 if side_batter_game_day_stats["homeRuns"] >= 1 else 0
+    season_batter_stats["hit_recorded"] = 1 if player_boxscore_stats_batting["hits"] >= 1 else 0
+    season_batter_stats["homeRuns_recorded"] = 1 if player_boxscore_stats_batting["homeRuns"] >= 1 else 0
 
-    this_year_stat_found, last_year_stat_found = False, False
+    # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
+    season_batter_stats['cur_season_avg'] = player_boxscore_season_stats_batting['avg']
+    season_batter_stats['cur_season_obp'] = player_boxscore_season_stats_batting['obp']
+    season_batter_stats['cur_season_slg'] = player_boxscore_season_stats_batting['slg']
+    season_batter_stats['cur_season_ops'] = player_boxscore_season_stats_batting['ops']
+
+    # last year season stats
+    last_year_stat_found = False
     for historical_batter_stat in side_batter_stats:
-        if historical_batter_stat["season"] == season_this_year_str:
-            stats = historical_batter_stat["stats"]
-            season_batter_stats["cur_season_runs_per_game"] = 1. * stats["runs"] / stats["gamesPlayed"]
-            season_batter_stats["cur_season_strikeOuts_per_game"] = 1. * stats["strikeOuts"] / stats["gamesPlayed"]
-            season_batter_stats["cur_season_hits_per_game"] = 1. * stats["hits"] / stats["gamesPlayed"]
-            this_year_stat_found = True
-
         if historical_batter_stat["season"] == season_last_year_str:
             season_batter_stats.update(historical_batter_stat["stats"])
             season_batter_stats["runs_per_game"] = 1. * season_batter_stats["runs"] / season_batter_stats["gamesPlayed"]
@@ -81,7 +73,7 @@ def get_side_batter_matchup(game_id, side, batter_player_id, force_fetch=False):
             season_batter_stats["hits_per_game"] = 1. * season_batter_stats["hits"] / season_batter_stats["gamesPlayed"]
             last_year_stat_found = True
 
-    return season_batter_stats if this_year_stat_found and last_year_stat_found else None
+    return season_batter_stats if last_year_stat_found else None
 
 
 def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
@@ -102,21 +94,30 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
         return None
 
     pitcher_stats_stats = pitcher_stats_data["stats"]
-    season_this_year_str = game["game_date"][0:4]
     season_last_year_str = str(int(game["game_date"][0:4]) - 1)
     season_pitcher_stats = {}
     season_pitcher_stats["name"] = pitcher_name
     season_pitcher_stats["id"] = pitcher_id
 
-    this_year_stat_found, last_year_stat_found = False, False
-    for historical_pitcher_stat in pitcher_stats_stats:
-        if historical_pitcher_stat["season"] == season_this_year_str:
-            stats = historical_pitcher_stat["stats"]
-            season_pitcher_stats["cur_season_runs_per_game"] = 1. * stats["runs"] / stats["gamesPlayed"]
-            season_pitcher_stats["cur_season_strikeOuts_per_game"] = 1. * stats["strikeOuts"] / stats["gamesPlayed"]
-            season_pitcher_stats["cur_season_hits_per_game"] = 1. * stats["hits"] / stats["gamesPlayed"]
-            this_year_stat_found = True
+    game_boxscore = get_boxscore_data(game_id)
+    if game_boxscore is None:
+        print(f'Failed to get box score for game_id: {game_id}')
+        return None
 
+    if f'ID{pitcher_id}' not in game_boxscore[side]['players']:
+        print(f'ID{pitcher_id} not in game_boxscore[{side}]["players"]')
+        return None
+
+    # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
+    player_boxscore_season_stats_pitching = game_boxscore[side]['players'][f'ID{pitcher_id}']['seasonStats']['pitching']
+    season_pitcher_stats['cur_season_obp'] = player_boxscore_season_stats_pitching['obp']
+    season_pitcher_stats['cur_hits_per_pitch'] = player_boxscore_season_stats_pitching['hits'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    season_pitcher_stats['cur_runs_per_pitch'] = player_boxscore_season_stats_pitching['runs'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    season_pitcher_stats['cur_homeRuns_per_pitch'] = player_boxscore_season_stats_pitching['homeRuns'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    season_pitcher_stats['cur_strikeOuts_per_pitch'] = player_boxscore_season_stats_pitching['strikeOuts'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+
+    last_year_stat_found = False
+    for historical_pitcher_stat in pitcher_stats_stats:
         if historical_pitcher_stat["season"] == season_last_year_str:
             season_pitcher_stats.update(historical_pitcher_stat["stats"])
             season_pitcher_stats["runs_per_game"] = 1. * season_pitcher_stats["runs"] / season_pitcher_stats["gamesPlayed"]
@@ -124,7 +125,7 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
             season_pitcher_stats["hits_per_game"] = 1. * season_pitcher_stats["hits"] / season_pitcher_stats["gamesPlayed"]
             last_year_stat_found = True
 
-    return season_pitcher_stats if this_year_stat_found and last_year_stat_found else None
+    return season_pitcher_stats if last_year_stat_found else None
 
 # side for home or away
 def get_df_side_matchup(game_id, side, force_fetch = False):
@@ -146,7 +147,12 @@ def get_df_side_matchup(game_id, side, force_fetch = False):
     side_batters = side_players_dataframe[side_players_dataframe["id"].isin(side_batting_lineup_ids)]
     side_batter_stats_list = []
     for side_batter_id in side_batters["id"]:
-        side_batter_matchup = get_side_batter_matchup(game_id, side, side_batter_id, force_fetch=force_fetch)
+        # player_boxscore_stats_batting, player_boxscore_season_stats_batting
+        side_batter_matchup = get_side_batter_matchup(
+            game_id, side, side_batter_id,
+            game_boxscore[side]['players'][f'ID{side_batter_id}']['stats']['batting'],
+            game_boxscore[side]['players'][f'ID{side_batter_id}']['seasonStats']['batting'],
+            force_fetch=force_fetch)
         if side_batter_matchup is None:
             continue
         side_batter_stats_list.append(side_batter_matchup)
