@@ -58,10 +58,10 @@ def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_sta
     season_batter_stats["homeRuns_recorded"] = 1 if player_boxscore_stats_batting["homeRuns"] >= 1 else 0
 
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
-    season_batter_stats['cur_season_avg'] = player_boxscore_season_stats_batting['avg']
-    season_batter_stats['cur_season_obp'] = player_boxscore_season_stats_batting['obp']
-    season_batter_stats['cur_season_slg'] = player_boxscore_season_stats_batting['slg']
-    season_batter_stats['cur_season_ops'] = player_boxscore_season_stats_batting['ops']
+    season_batter_stats['cur_season_avg'] = float(player_boxscore_season_stats_batting['avg'])
+    season_batter_stats['cur_season_obp'] = float(player_boxscore_season_stats_batting['obp'])
+    season_batter_stats['cur_season_slg'] = float(player_boxscore_season_stats_batting['slg'])
+    season_batter_stats['cur_season_ops'] = float(player_boxscore_season_stats_batting['ops'])
 
     # last year season stats
     last_year_stat_found = False
@@ -110,7 +110,7 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
 
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
     player_boxscore_season_stats_pitching = game_boxscore[side]['players'][f'ID{pitcher_id}']['seasonStats']['pitching']
-    season_pitcher_stats['cur_season_obp'] = player_boxscore_season_stats_pitching['obp']
+    season_pitcher_stats['cur_season_obp'] = float(player_boxscore_season_stats_pitching['obp'])
     season_pitcher_stats['cur_hits_per_pitch'] = player_boxscore_season_stats_pitching['hits'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
     season_pitcher_stats['cur_runs_per_pitch'] = player_boxscore_season_stats_pitching['runs'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
     season_pitcher_stats['cur_homeRuns_per_pitch'] = player_boxscore_season_stats_pitching['homeRuns'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
