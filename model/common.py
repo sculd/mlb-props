@@ -35,10 +35,12 @@ features = \
     ["pitching_id", "batting_name"] + \
     ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
     ["batting_rbi", "batting_id", "pitching_name", "batting_hit_recorded"] + \
-    ["pitching_cur_season_runs_per_game", "pitching_cur_season_strikeOuts_per_game", "pitching_cur_season_hits_per_game"] + \
-    ["batting_cur_season_runs_per_game",  "batting_cur_season_strikeOuts_per_game",  "batting_cur_season_hits_per_game"] + \
+    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
+    ["batting_cur_season_avg"] + \
     ["temp", "game_venue", 'game_date', "game_year"]
 
+#    ["pitching_cur_season_obp", "pitching_cur_runs_per_pitch", "pitching_cur_homeRuns_per_pitch"] + \
+#    ["batting_cur_season_obp", "batting_cur_season_slg", "batting_cur_season_ops"] + \
 #    ["pitching_runs", "pitching_strikeOuts", "pitching_hits"] + \
 #    ["batting_runs",  "batting_strikeOuts",  "batting_hits"] + \
 
@@ -71,7 +73,7 @@ def probability_to_odds(probability):
     return round(-100 / ((1/probability)-1))
 
 def juiced_odds_calculator(probability):
-    return odds_calculator(probabiliby) - 15
+    return odds_calculator(probability) - 15
 
 def odds_to_probability(odds):
     odds = float(odds)
