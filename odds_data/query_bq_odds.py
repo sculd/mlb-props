@@ -15,12 +15,13 @@ bq_client = bigquery.Client()
 
 query = """
     SELECT * 
-    FROM `trading-290017.major_league_baseball.odds_hit_recorded` 
+    FROM `trading-290017.major_league_baseball.odds_batter_prop`
+    WHERE property = "{property}" 
     where game_date >= "2023-04-01"
 """
 
-def download_hit_recorded():
-    query_job = bq_client.query(query)  # Make an API request.
+def download_property():
+    query_job = bq_client.query(query.format(property=property))  # Make an API request.
 
     row_dicts = []
     for row in query_job:

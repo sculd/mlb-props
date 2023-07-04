@@ -67,6 +67,7 @@ def fetch_df_odd_today(subcategory_id, subcategory_name, offer_label_player_name
                 'team_away': game['away_name'],
                 'team_home': game['home_name'],
                 'player_name': player_name,
+                'property': subcategory_name,
                 'over_odds': offer['outcomes'][0]['oddsAmerican'],
                 'over_line': offer['outcomes'][0]['line'],
                 'under_odds': offer['outcomes'][1]['oddsAmerican'],
