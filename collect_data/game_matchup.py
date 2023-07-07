@@ -63,6 +63,7 @@ def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_sta
     season_batter_stats["2runs_recorded"] = 1 if player_boxscore_stats_batting["runs"] >= 2 else 0
     season_batter_stats["1stolenBases_recorded"] = 1 if player_boxscore_stats_batting["stolenBases"] >= 1 else 0
     season_batter_stats["2stolenBases_recorded"] = 1 if player_boxscore_stats_batting["stolenBases"] >= 2 else 0
+    season_batter_stats["1doubles_recorded"] = 1 if player_boxscore_stats_batting["doubles"] >= 1 else 0
 
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
     season_batter_stats['cur_season_avg'] = float(player_boxscore_season_stats_batting['avg'])

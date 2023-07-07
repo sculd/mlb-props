@@ -69,7 +69,6 @@ features_1homeruns_recorded = \
     ["batting_cur_season_avg"] + \
     ["temp", "game_venue", 'game_date', "game_year"] + [target_1homeruns_recorded]
 
-
 target_1hstrikeouts_recorded = "batting_1strikeOuts_recorded"
 features_1hstrikeouts_recorded = \
     ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
@@ -110,25 +109,25 @@ features_2runs_recorded = \
     ["batting_cur_season_avg"] + \
     ["temp", "game_venue", 'game_date', "game_year"] + [target_2runs_recorded]
 
-target_1stokenbases_recorded = "batting_1stolenBases_recorded"
-features_1stokenbases_recorded = \
+target_1stolenbases_recorded = "batting_1stolenBases_recorded"
+features_1stolenbases_recorded = \
     ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
     ["pitching_id", "batting_name"] + \
     ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
     ["batting_rbi", "batting_id", "pitching_name"] + \
     ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
     ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1stokenbases_recorded]
+    ["temp", "game_venue", 'game_date', "game_year"] + [target_1stolenbases_recorded]
 
-target_2stokenbases_recorded = "batting_2stolenBases_recorded"
-features_2stokenbases_recorded = \
+target_2stolenbases_recorded = "batting_2stolenBases_recorded"
+features_2stolenbases_recorded = \
     ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
     ["pitching_id", "batting_name"] + \
     ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
     ["batting_rbi", "batting_id", "pitching_name"] + \
     ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
     ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_2stokenbases_recorded]
+    ["temp", "game_venue", 'game_date', "game_year"] + [target_2stolenbases_recorded]
 
 
 
@@ -152,8 +151,8 @@ model_1hstrikeouts_file_name = f"{model_base_dir}/batter_1hstrikeouts_regression
 model_2hstrikeouts_file_name = f"{model_base_dir}/batter_2hstrikeouts_regression_model"
 model_1runs_file_name = f"{model_base_dir}/batter_1runs_regression_model"
 model_2runs_file_name = f"{model_base_dir}/batter_2runs_regression_model"
-model_1stokenbases_file_name = f"{model_base_dir}/batter_1stokenbases_regression_model"
-model_2stokenbases_file_name = f"{model_base_dir}/batter_2stokenbases_regression_model"
+model_1stolenbases_file_name = f"{model_base_dir}/batter_1stolenbases_regression_model"
+model_2stolenbases_file_name = f"{model_base_dir}/batter_2stolenbases_regression_model"
 
 
 
