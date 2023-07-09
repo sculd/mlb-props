@@ -54,6 +54,13 @@ def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_sta
     season_batter_stats["name"] = batter_player_name
     season_batter_stats["id"] = batter_player_id
     # learning targets
+    season_batter_stats["boxscore_hits"] = player_boxscore_stats_batting["hits"]
+    season_batter_stats["boxscore_homeRuns"] = player_boxscore_stats_batting["homeRuns"]
+    season_batter_stats["boxscore_strikeOuts"] = player_boxscore_stats_batting["strikeOuts"]
+    season_batter_stats["boxscore_runs"] = player_boxscore_stats_batting["runs"]
+    season_batter_stats["boxscore_stolenBases"] = player_boxscore_stats_batting["stolenBases"]
+    season_batter_stats["boxscore_doubles"] = player_boxscore_stats_batting["doubles"]
+
     season_batter_stats["1hits_recorded"] = 1 if player_boxscore_stats_batting["hits"] >= 1 else 0
     season_batter_stats["2hits_recorded"] = 1 if player_boxscore_stats_batting["hits"] >= 2 else 0
     season_batter_stats["1homeRuns_recorded"] = 1 if player_boxscore_stats_batting["homeRuns"] >= 1 else 0

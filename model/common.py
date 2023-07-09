@@ -195,6 +195,8 @@ def create_models(train_data, target_column_name):
     plot_model(regression_model_rf, plot = 'auc', scale = 0.6)
     return regression_model_ada, regression_model_lightgbm, regression_model_gbc, regression_model_rf
 
+
+
 def predict_and_odds(df_data, regression_model):
     df_prediction = pycaret.classification.predict_model(data = df_data, estimator = regression_model)
     df_prediction = pd.merge(df_prediction, df_player_team_positions[['player_id','player_team_name']], left_on='batting_id', right_on='player_id', how='left')
@@ -217,7 +219,3 @@ def evaluate_predictions(model_labels, ths, target_column):
         [[model_label[1]] + [get_eval_profile(model_label[0], th, target_column) for th in ths] for model_label in model_labels]
     table = tabulate.tabulate(data, tablefmt='html')
     return table
-
-
-
-
