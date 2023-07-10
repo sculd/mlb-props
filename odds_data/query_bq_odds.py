@@ -17,11 +17,23 @@ query = """
     SELECT * 
     FROM `trading-290017.major_league_baseball.odds_batter_prop`
     WHERE property = "{property}" 
-    where game_date >= "2023-04-01"
+    AND game_date >= "2023-04-01"
 """
 
-def download_property():
-    query_job = bq_client.query(query.format(property=property))  # Make an API request.
+query_all_properties = """
+    SELECT * 
+    FROM `trading-290017.major_league_baseball.odds_batter_prop`
+    WHERE TRUE
+    AND game_date >= "2023-04-01"
+"""
+
+def download_property(property = 'all'):
+    if property == 'all':
+        query_formatted = query_all_properties
+    else:
+        query_formatted = query.format(property=property)
+    print(f'running querry\n{query_formatted}')
+    query_job = bq_client.query(query_formatted)  # Make an API request.
 
     row_dicts = []
     for row in query_job:
@@ -33,4 +45,4 @@ def download_property():
     df_odds = pd.DataFrame(row_dicts)
     df_odds['game_id'] = df_odds.game_id.astype(np.int32)
 
-    df_odds.to_pickle('odds_data/df_odds_hit_recorded.pkl')
+    df_odds.to_pickle(f'odds_data/df_odds_{property}.pkl')
