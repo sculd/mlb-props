@@ -3,3 +3,4 @@
 *.pyc
 collect_data/*.pkl
 credential.json
+update_data/*.txt
