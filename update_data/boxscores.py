@@ -45,7 +45,7 @@ class NpEncoder(json.JSONEncoder):
 
 def write_boxscores_to_gcs_one_batch(boxscores, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
-    json_file_name = f'update_data/boxscore_{date_today}_{b_i}.txt'
+    json_file_name = f'update_data/temp/boxscore_{date_today}_{b_i}.txt'
     with open(json_file_name, 'w') as jf:
         for game_id, boxscore in boxscores.items():
             # gameId (not game_id) is part of the boxscore e.g. '2023/05/01/atlmlb-nynmlb-1'
