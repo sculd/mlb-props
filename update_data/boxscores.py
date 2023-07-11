@@ -4,6 +4,7 @@ import numpy as np
 from google.cloud import bigquery
 from google.cloud import storage
 import collect_data.boxscores
+import statsapi
 
 if os.path.exists('credential.json'):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.getcwd(), 'credential.json')
@@ -107,4 +108,22 @@ def upload_boxscores_to_gcs(boxscores):
         )
         load_job.result()  # Waits for the job to complete.
 
+def upload_boxscores_to_gcs_between(start_date_str, end_date_str):
+    print(f'upload_boxscores_to_gcs_between {start_date_str} and {end_date_str}')
 
+    schedules = statsapi.schedule(start_date = start_date_str, end_date = end_date_str)
+    game_ids = [sc['game_id'] for sc in schedules]
+
+    boxscores = collect_data.boxscores.ingest_boxscore_game_ids(game_ids)
+    upload_boxscores_to_gcs(boxscores)
+
+    print(f'done upload_boxscores_to_gcs_between {start_date_str} to {end_date_str}')
+    return boxscores
+
+
+def upload_boxscores_to_gcs_yesterday():
+    date_yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    print(f'upload_boxscores_to_gcs_yesterday {date_yesterday}')
+    ret = upload_boxscores_to_gcs_between(date_yesterday, date_yesterday)
+    print(f'done upload_boxscores_to_gcs_yesterday {date_yesterday}')
+    return ret

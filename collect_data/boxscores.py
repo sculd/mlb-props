@@ -70,7 +70,8 @@ def ingest_boxscore_game_ids(game_id_list):
     for th in ths:
         th.join()
     
-    print(f'done ingest_boxscore_game_ids {len(game_id_list)}')    
+    print(f'done ingest_boxscore_game_ids {len(game_id_list)}')
+    return {game_id: _boxscores[game_id] for game_id in game_id_list}
 
 def ingest_boxscore_year(year):
     print(f'year: {year}')
