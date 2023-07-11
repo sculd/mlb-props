@@ -5,6 +5,6 @@ if os.path.exists('credential.json'):
 
 
 import update_data.boxscores
-boxscores = update_data.boxscores.upload_boxscores_to_gcs_yesterday()
+boxscores = update_data.boxscores.upload_boxscores_to_gcs_2days_prior()
 print(f'boxscores: {len(boxscores)}')
 
