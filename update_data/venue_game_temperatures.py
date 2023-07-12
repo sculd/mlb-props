@@ -57,7 +57,10 @@ def write_venue_game_local_temp(venue_game_temperatures, b_i):
                 'game_temperature': game_temperatures,
                 'date': dte,
             }
-            jf.write(json.dumps(payload, cls=NpEncoder) + '\n')
+            payload_str = json.dumps(payload, cls=NpEncoder)
+            if 'nan' in payload_str.lower():
+                continue
+            jf.write(payload_str + '\n')
 
     return json_file_name
 
