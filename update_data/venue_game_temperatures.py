@@ -14,7 +14,7 @@ fetch_print_prefix = "\n### "
 gs_bucket_name = "major-league-baseball"
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
-bq_table_id = "venue_game_temperature
+bq_table_id = "venue_game_temperature"
 table_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
 _bq_client = bigquery.Client()
