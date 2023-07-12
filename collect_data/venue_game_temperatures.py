@@ -1,11 +1,5 @@
-import pandas as pd, numpy as np
-import statsapi
-from statsapi import player_stat_data
-import requests
-from datetime import datetime, timedelta
-import numpy as np
-import pickle
 import meteostat
+import math
 
 from collect_data.common import *
 from collect_data.schedules import _schedules
@@ -41,6 +35,7 @@ def ingest_venue_game_temperatures_for_game_id_list(game_id_list, schs = None):
         schs = _schedules
     cnt_invalid_venue = 0
     invalid_venues = set()
+    venue_game_temperatures = {}
     for i, game_id in enumerate(game_id_list):
         if i % 1000 == 0:
             print(f'processing {i} out of {len(game_id_list)} game_id {game_id} cnt_invalid_venue: {cnt_invalid_venue}, invalid_venues: {len(invalid_venues)}')
@@ -56,10 +51,14 @@ def ingest_venue_game_temperatures_for_game_id_list(game_id_list, schs = None):
         park_lat, park_lon = df_venue.latitude, df_venue.longitude
         game_temperature = get_venue_game_temperatures(park_lat, park_lon, game["game_date"], game["game_datetime"])
         key = str((park_lat, park_lon, game["game_datetime"],))
+        if np.isnan(game_temperature) or math.isnan(game_temperature):
+            continue
     
         _venue_game_temperatures[key] = game_temperature
+        venue_game_temperatures[key] = game_temperature
     
     print(f'cnt_invalid_venue {cnt_invalid_venue}, invalid_venues: {len(invalid_venues)}')
+    return venue_game_temperatures
 
 def dump_venue_game_temperatures():
     pickle.dump(_venue_game_temperatures, open(_pkl_file_path, 'wb'))

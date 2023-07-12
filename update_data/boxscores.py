@@ -44,7 +44,7 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 
-def write_boxscores_to_gcs_one_batch(boxscores, b_i):
+def write_boxscores_local_temp(boxscores, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     json_file_name = f'update_data/temp/boxscore_{date_today}_{b_i}.txt'
     with open(json_file_name, 'w') as jf:
@@ -59,25 +59,20 @@ def write_boxscores_to_gcs_one_batch(boxscores, b_i):
             }
             jf.write(json.dumps(payload, cls=NpEncoder) + '\n')
 
-    # uoload the jsonfied data to gcs
-    storage_client = storage.Client()
-    if storage.Blob(bucket=storage_client.bucket(gs_bucket_name), name=json_file_name).exists(storage_client):
-        print(f'{json_file_name} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
-        return None
-
     return json_file_name
 
 
 def upload_boxscores_to_gcs(boxscores):
     l = len(boxscores)
     n_batches = math.ceil(l / 1000.0)
-    print(f'[upload_boxscores_to_gcs] n_batches: {n_batches}, l: {l}')
+    print(f'[upload_boxscores_to_gcs] n_batches: {n_batches}, boxscores: {l}')
     game_ids_batch = np.array_split(list(boxscores.keys()), n_batches)
 
     for i, game_ids in enumerate(game_ids_batch):
         print(f'batch {i}, size: {len(game_ids)}')
-        boxscore_batch_file_name = write_boxscores_to_gcs_one_batch({game_id: boxscores[game_id] for game_id in game_ids}, i)
+        boxscore_batch_file_name = write_boxscores_local_temp({game_id: boxscores[game_id] for game_id in game_ids}, i)
         if boxscore_batch_file_name is None:
+            print('filed to create local batch for {i}')
             continue
 
         print(f'{boxscore_batch_file_name}')
@@ -114,16 +109,39 @@ def upload_boxscores_to_gcs_between(start_date_str, end_date_str):
     schedules = statsapi.schedule(start_date = start_date_str, end_date = end_date_str)
     game_ids = [sc['game_id'] for sc in schedules]
 
+    print(f'[upload_boxscores_to_gcs_between] game_ids: {len(game_ids)}')
     boxscores = collect_data.boxscores.ingest_boxscore_game_ids(game_ids)
     upload_boxscores_to_gcs(boxscores)
 
     print(f'done upload_boxscores_to_gcs_between {start_date_str} to {end_date_str}')
     return boxscores
 
+def upload_boxscores_to_gcs_ndays_prior(days):
+    date_ndays_prior = (datetime.datetime.today() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    print(f'upload_boxscores_to_gcs_ndays_prior days: {days}, {date_ndays_prior}')
+    ret = upload_boxscores_to_gcs_between(date_ndays_prior, date_ndays_prior)
+    print(f'done upload_boxscores_to_gcs_ndays_prior {date_ndays_prior}')
+    return ret
 
 def upload_boxscores_to_gcs_yesterday():
-    date_yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-    print(f'upload_boxscores_to_gcs_yesterday {date_yesterday}')
-    ret = upload_boxscores_to_gcs_between(date_yesterday, date_yesterday)
-    print(f'done upload_boxscores_to_gcs_yesterday {date_yesterday}')
-    return ret
+    return upload_boxscores_to_gcs_ndays_prior(1)
+
+def upload_boxscores_to_gcs_2days_prior():
+    return upload_boxscores_to_gcs_ndays_prior(2)
+
+def read_boxscores_bq(start_date_str, end_date_str):
+    print(f'read_boxscores_bq {start_date_str} and {end_date_str}')
+
+    query = f"""
+        SELECT game_id, boxscore 
+        FROM `trading-290017.major_league_baseball.boxscore`
+        where date >= "{start_date_str}" AND date <= "{end_date_str}"
+        """
+    print(f'running bq query\b{query}')
+
+    query_job = _bq_client.query(query)
+    rows = query_job.result()  # Waits for query to finish
+    boxscores = {row.game_id: row.boxscore for row in rows}
+    print(f'done read_boxscores_bq {start_date_str} to {end_date_str}')
+
+    return boxscores
