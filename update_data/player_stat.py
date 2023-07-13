@@ -67,6 +67,8 @@ def write_player_stats_to_gcs_one_batch(player_stats, b_i):
 
 def upload_player_stats_to_gcs(player_stats):
     l = len(player_stats)
+    if l == 0:
+        return
     n_batches = math.ceil(l / 1000.0)
     print(f'[upload_player_stats_to_gcs] n_batches: {n_batches}, l: {l}')
     player_stats_batch = np.array_split(list(player_stats.keys()), n_batches)

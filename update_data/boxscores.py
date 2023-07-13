@@ -64,6 +64,8 @@ def write_boxscores_local_temp(boxscores, b_i):
 
 def upload_boxscores_to_gcs(boxscores):
     l = len(boxscores)
+    if l == 0:
+        return
     n_batches = math.ceil(l / 1000.0)
     print(f'[upload_boxscores_to_gcs] n_batches: {n_batches}, boxscores: {l}')
     game_ids_batch = np.array_split(list(boxscores.keys()), n_batches)

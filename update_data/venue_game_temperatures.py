@@ -67,6 +67,8 @@ def write_venue_game_local_temp(venue_game_temperatures, b_i):
 
 def upload_venue_game_temperatures_to_gcs(venue_game_temperatures):
     l = len(venue_game_temperatures)
+    if l == 0:
+        return
     n_batches = math.ceil(l / 1000.0)
     print(f'[upload_venue_game_temperatures_to_gcs] n_batches: {n_batches}, venue_game_temperatures: {l}')
     location_datetimes_batch = np.array_split(list(venue_game_temperatures.keys()), n_batches)
