@@ -4,14 +4,16 @@ from statsapi import player_stat_data
 import requests
 from datetime import datetime, timedelta
 import numpy as np
-import pickle
+import os, pickle
 
 from collect_data.common import *
 
 base_dir = "collect_data"
 _pkl_file_path = f'{base_dir}/schedules.pkl'
 
-_schedules = pickle.load(open(_pkl_file_path, 'rb'))
+_schedules = {}
+if os.path.isfile(_pkl_file_path):
+    _schedules = pickle.load(open(_pkl_file_path, 'rb'))
 
 def get_end_date(year):
     end_date = f"{year+1}-03-01"
@@ -66,6 +68,12 @@ def fetch_schedule_today(update_schedule=True):
     print(f'fetch_schedule_today {date_today}')
     ret = fetch_schedule_between(date_today, date_today, update_schedule=update_schedule)
     print(f'done fetch_schedule_today {date_today}')
+    return ret
+
+def fetch_schedule_date(date_str, update_schedule=True):
+    print(f'fetch_schedule_date {date_str}')
+    ret = fetch_schedule_between(date_str, date_str, update_schedule=update_schedule)
+    print(f'done fetch_schedule_date {date_str}')
     return ret
 
 def dump_schedule_data():

@@ -5,7 +5,7 @@ import requests
 from datetime import datetime, timedelta
 import numpy as np
 import math
-import pickle
+import os, pickle
 import copy
 import threading
 
@@ -14,7 +14,18 @@ from collect_data.common import *
 base_dir = "collect_data"
 _pkl_file_path = f'{base_dir}/game_id_lists.pkl'
 
-_game_id_lists = pickle.load(open(_pkl_file_path, 'rb'))
+_game_id_lists = []
+if os.path.isfile(_pkl_file_path):
+    _game_id_lists = pickle.load(open(_pkl_file_path, 'rb'))
+
+
+def fetch_game_id_between(start_date_str, end_date_str):
+    print(f'getting game_id list between {start_date_str} and {end_date_str}')
+    schedule = statsapi.schedule(start_date=start_date_str, end_date=end_date_str)
+    df_schedule = pd.json_normalize(schedule)
+    data = list(df_schedule["game_id"].drop_duplicates())
+    print(f'done getting game_id list between {start_date_str} and {end_date_str}')
+    return data
 
 def get_game_id_list_year(year, force_fetch = False):
     print(f'getting game_id list {year}')

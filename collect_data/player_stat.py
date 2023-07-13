@@ -5,7 +5,7 @@ import requests
 from datetime import datetime, timedelta
 import numpy as np
 import math
-import pickle
+import os, pickle
 import threading
 
 from collect_data.common import *
@@ -13,7 +13,9 @@ from collect_data.common import *
 base_dir = "collect_data"
 _pkl_file_path = f'{base_dir}/player_stats.pkl'
 
-_player_stats = pickle.load(open(_pkl_file_path, 'rb'))
+_player_stats = {}
+if os.path.isfile(_pkl_file_path):
+    _player_stats = pickle.load(open(_pkl_file_path, 'rb'))
 
 def get_player_stat_data(player_id, group, force_fetch = False):
     global _player_stats

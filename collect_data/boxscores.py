@@ -14,7 +14,10 @@ from collect_data.game_id_lists import *
 base_dir = "collect_data"
 _pkl_file_path = f'{base_dir}/boxscores.pkl'
 
-_boxscores = pickle.load(open(_pkl_file_path, 'rb'))
+_boxscores = {}
+if os.path.isfile(_pkl_file_path):
+    _boxscores = pickle.load(open(_pkl_file_path, 'rb'))
+
 _boxscores_lock = threading.Lock()
 
 def get_boxscore_data(game_id, boxscores=None, boxscores_lock=None, force_fetch = False):
