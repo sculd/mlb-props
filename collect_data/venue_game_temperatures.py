@@ -1,5 +1,5 @@
 import meteostat
-import math
+import math, os
 
 from collect_data.common import *
 from collect_data.schedules import _schedules
@@ -9,7 +9,9 @@ from static_data.load_static_data import *
 base_dir = "collect_data"
 _pkl_file_path = f'{base_dir}/venue_game_temperatures.pkl'
 
-_venue_game_temperatures = pickle.load(open(_pkl_file_path, 'rb'))
+_venue_game_temperatures = {}
+if os.path.isfile(_pkl_file_path):
+    _venue_game_temperatures = pickle.load(open(_pkl_file_path, 'rb'))
 #_venue_game_temperatures = {}
 
 def celsius_to_fahrenheit(celsius):
