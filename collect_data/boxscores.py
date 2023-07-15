@@ -12,7 +12,7 @@ from collect_data.common import *
 from collect_data.game_id_lists import *
 
 base_dir = "collect_data"
-_pkl_file_path = f'{base_dir}/boxscores.pkl'
+_pkl_file_path = f'{base_dir}/boxscores_2022_and_2023_0401_0709.pkl'
 
 _boxscores = {}
 if os.path.isfile(_pkl_file_path):

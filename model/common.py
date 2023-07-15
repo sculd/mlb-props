@@ -38,96 +38,44 @@ Features = ['pitching_gamesPlayed', 'pitching_gamesStarted', 'pitching_groundOut
 
 #Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]] = Data[["batting_avg","batting_obp","batting_slg","batting_ops","pitching_strikePercentage", "pitching_avg" , "pitching_era", "pitching_obp", "pitching_slg", "pitching_ops"]].replace([".---", "-.--"], np.nan).astype(float)
 
-target_1hits_recorded = "batting_1hits_recorded"
-features_1hits_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1hits_recorded]
+ignore_features = ["pitching_id", "batting_id", 'game_date', "game_year", "batting_teamName", "batting_shortName"]
 
+features_common = \
+    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
+    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
+    ["pitching_name"] + \
+    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game", "batting_rbi"] + \
+    ["batting_cur_season_avg"] + \
+    ["batting_name"] + \
+    ["temp", "game_venue"] + ignore_features
+
+
+target_1hits_recorded = "batting_1hits_recorded"
+features_1hits_recorded = features_common + [target_1hits_recorded]
 
 target_2hits_recorded = "batting_2hits_recorded"
-features_2hits_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_2hits_recorded]
+features_2hits_recorded = features_common + [target_2hits_recorded]
 
 target_1homeruns_recorded = "batting_1homeRuns_recorded"
-features_1homeruns_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1homeruns_recorded]
+features_1homeruns_recorded = features_common + [target_1homeruns_recorded]
 
 target_1hstrikeouts_recorded = "batting_1strikeOuts_recorded"
-features_1hstrikeouts_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1hstrikeouts_recorded]
+features_1hstrikeouts_recorded = features_common + [target_1hstrikeouts_recorded]
 
 target_2hstrikeouts_recorded = "batting_2strikeOuts_recorded"
-features_2hstrikeouts_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_2hstrikeouts_recorded]
+features_2hstrikeouts_recorded = features_common + [target_2hstrikeouts_recorded]
 
 target_1runs_recorded = "batting_1runs_recorded"
-features_1runs_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1runs_recorded]
+features_1runs_recorded = features_common + [target_1runs_recorded]
 
 target_2runs_recorded = "batting_2runs_recorded"
-features_2runs_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_2runs_recorded]
+features_2runs_recorded = features_common + [target_2runs_recorded]
 
 target_1stolenbases_recorded = "batting_1stolenBases_recorded"
-features_1stolenbases_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_1stolenbases_recorded]
+features_1stolenbases_recorded = features_common + [target_1stolenbases_recorded]
 
 target_2stolenbases_recorded = "batting_2stolenBases_recorded"
-features_2stolenbases_recorded = \
-    ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_id", "batting_name"] + \
-    ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game"] + \
-    ["batting_rbi", "batting_id", "pitching_name"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
-    ["batting_cur_season_avg"] + \
-    ["temp", "game_venue", 'game_date', "game_year"] + [target_2stolenbases_recorded]
+features_2stolenbases_recorded = features_common + [target_2stolenbases_recorded]
 
 
 
@@ -137,8 +85,6 @@ features_2stolenbases_recorded = \
 #    ["batting_runs",  "batting_strikeOuts",  "batting_hits"] + \
 
 categorical_features = ["game_venue"] + ["batting_name"] + ["pitching_name"]
-
-ignore_features = ["pitching_id", "batting_id", 'game_date', "game_year"]
 
 #Exclude_Variables = ["Unnamed: 0","pitching_numberOfPitches","pitching_outs","pitching_strikes","pitching_strikePercentage","pitching_totalBases","pitching_baseOnBalls","pitching_hitByPitch","pitching_atBats",       'batting_groundOuts','batting_hitByPitch', 'batting_caughtStealing','batting_stolenBases','batting_plateAppearances',"pitching_game_id","batting_game_id",'batting_leftOnBase', 'batting_sacBunts', 'batting_sacFlies',"batting_numberOfPitches","batting_totalBases","batting_baseOnBalls", "batting_doubles", "batting_triples","batting_homeRuns","batting_airOuts","batting_atBats", "batting_rbi"]
 

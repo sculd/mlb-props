@@ -8,6 +8,7 @@ import math
 import pickle
 import threading
 
+import collect_data.game_id_lists
 from collect_data.common import *
 from collect_data.schedules import _schedules
 from collect_data.boxscores import *
@@ -26,7 +27,7 @@ def player_name_to_id(player_name):
         return ""
 
 
-def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_stats_batting, player_boxscore_season_stats_batting, force_fetch=False):
+def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_stats_batting, player_boxscore_season_stats_batting, team_boxscore, force_fetch=False):
     game = _schedules[game_id]
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
@@ -53,6 +54,9 @@ def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_sta
     season_batter_stats = {}
     season_batter_stats["name"] = batter_player_name
     season_batter_stats["id"] = batter_player_id
+    season_batter_stats["teamName"] = team_boxscore["teamName"]
+    season_batter_stats["shortName"] = team_boxscore["shortName"]
+
     # learning targets
     season_batter_stats["boxscore_hits"] = player_boxscore_stats_batting["hits"]
     season_batter_stats["boxscore_homeRuns"] = player_boxscore_stats_batting["homeRuns"]
@@ -167,6 +171,7 @@ def get_df_side_matchup(game_id, side, force_fetch = False):
             game_id, side, side_batter_id,
             game_boxscore[side]['players'][f'ID{side_batter_id}']['stats']['batting'],
             game_boxscore[side]['players'][f'ID{side_batter_id}']['seasonStats']['batting'],
+            game_boxscore['teamInfo'][side],
             force_fetch=force_fetch)
         if side_batter_matchup is None:
             continue
@@ -362,3 +367,11 @@ def get_df_game_matchup(game_id_list):
     df_game_matchup['game_year'] = df_game_matchup.game_date.dt.to_period('y')
 
     return df_game_matchup
+
+def get_df_game_between(start_date_str, end_date_str):
+    game_id_list = collect_data.game_id_lists.fetch_game_id_between(start_date_str, end_date_str)
+    return get_df_game_matchup(game_id_list)
+
+def get_df_game_date(date_str):
+    return get_df_game_between(date_str, date_str)
+
