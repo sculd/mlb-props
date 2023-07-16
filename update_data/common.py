@@ -14,13 +14,17 @@ _bq_client = bigquery.Client()
 
 def upload_newline_delimited_json_file_to_gcs_then_import_bq(json_filename, bq_table_id, bq_schema, rewrite=False):
     # uoload the file to gcs
-    if not rewrite and storage.Blob(bucket=_storage_client.bucket(gs_bucket_name), name=json_filename).exists(_storage_client):
-        print(f'{json_filename} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
-        return
+    if storage.Blob(bucket=_storage_client.bucket(gs_bucket_name), name=json_filename).exists(_storage_client):
+        if rewrite:
+            bucket = _storage_client.bucket(gs_bucket_name)
+            blob = bucket.blob(json_filename)
+            blob.delete(if_generation_match=None)
+        else:
+            print(f'{json_filename} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
+            return
 
     bucket = _storage_client.bucket(gs_bucket_name)
     blob = bucket.blob(json_filename)
-
     generation_match_precondition = 0
     blob.upload_from_filename(json_filename, if_generation_match=generation_match_precondition)
 
