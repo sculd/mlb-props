@@ -4,6 +4,7 @@ import numpy as np
 from google.cloud import bigquery
 from google.cloud import storage
 import collect_data.boxscores
+import update_data.common
 
 if os.path.exists('credential.json'):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.getcwd(), 'credential.json')
@@ -18,16 +19,6 @@ table_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
 _bq_client = bigquery.Client()
 
-
-# load the jsonfied data to bq
-job_config = bigquery.LoadJobConfig(
-    schema=[
-        bigquery.SchemaField("player_id_side", "STRING", "REQUIRED"),
-        bigquery.SchemaField("ingestion_date", "DATE", "REQUIRED"),
-        bigquery.SchemaField("player_stat", "JSON", "REQUIRED"),
-    ],
-    source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
-)
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -80,31 +71,11 @@ def upload_player_stats_to_gcs(player_stats):
             continue
 
         print(f'{player_stats_batch_file_name}')
-        json_file_name = player_stats_batch_file_name
-
-        # uoload the jsonfied data to gcs
-        storage_client = storage.Client()
-        if storage.Blob(bucket=storage_client.bucket(gs_bucket_name), name=json_file_name).exists(storage_client):
-            print(f'{json_file_name} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
-            continue
-
-        bucket = storage_client.bucket(gs_bucket_name)
-        blob = bucket.blob(json_file_name)
-
-        generation_match_precondition = 0
-        blob.upload_from_filename(json_file_name, if_generation_match=generation_match_precondition)
-
-        print(
-            f"File {json_file_name} uploaded to {json_file_name}."
+        update_data.common.upload_newline_delimited_json_file_to_gcs_then_import_bq(
+            player_stats_batch_file_name, table_id,
+            [
+                bigquery.SchemaField("player_id_side", "STRING", "REQUIRED"),
+                bigquery.SchemaField("ingestion_date", "DATE", "REQUIRED"),
+                bigquery.SchemaField("player_stat", "JSON", "REQUIRED"),
+            ]
         )
-
-        # ingest to bq
-        load_job = _bq_client.load_table_from_uri(
-            f"gs://{gs_bucket_name}/{json_file_name}",
-            table_id,
-            location="US",  # Must match the destination dataset location.
-            job_config=job_config
-        )
-        load_job.result()  # Waits for the job to complete.
-
-

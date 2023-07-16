@@ -4,6 +4,7 @@ import numpy as np
 from google.cloud import bigquery
 from google.cloud import storage
 import collect_data.venue_game_temperatures
+import update_data.common
 import statsapi
 
 if os.path.exists('credential.json'):
@@ -81,32 +82,14 @@ def upload_venue_game_temperatures_to_gcs(venue_game_temperatures):
             continue
 
         print(f'{batch_file_name}')
-        json_file_name = batch_file_name
-
-        # uoload the jsonfied data to gcs
-        storage_client = storage.Client()
-        if storage.Blob(bucket=storage_client.bucket(gs_bucket_name), name=json_file_name).exists(storage_client):
-            print(f'{json_file_name} already present in the bucket {gs_bucket_name} thus not proceeding further')
-            continue
-
-        bucket = storage_client.bucket(gs_bucket_name)
-        blob = bucket.blob(json_file_name)
-
-        generation_match_precondition = 0
-        blob.upload_from_filename(json_file_name, if_generation_match=generation_match_precondition)
-
-        print(
-            f"File {json_file_name} uploaded to {json_file_name}."
+        update_data.common.upload_newline_delimited_json_file_to_gcs_then_import_bq(
+            batch_file_name, table_id,
+            [
+                bigquery.SchemaField("location_datetime", "STRING", "REQUIRED"),
+                bigquery.SchemaField("game_temperature", "FLOAT", "REQUIRED"),
+                bigquery.SchemaField("date", "DATE", "REQUIRED"),
+            ]
         )
-
-        # ingest to bq
-        load_job = _bq_client.load_table_from_uri(
-            f"gs://{gs_bucket_name}/{json_file_name}",
-            table_id,
-            location="US",  # Must match the destination dataset location.
-            job_config=job_config
-        )
-        load_job.result()  # Waits for the job to complete.
 
 def upload_venue_game_temperatures_to_gcs_between(start_date_str, end_date_str):
     print(f'upload_venue_game_temperatures_to_gcs_between {start_date_str} and {end_date_str}')
@@ -146,7 +129,7 @@ def read_venue_game_temperatures_bq(start_date_str, end_date_str):
 
     query_job = _bq_client.query(query)
     rows = query_job.result()  # Waits for query to finish
-    venue_game_temperatures = {row.location_datetime: row.game_temperature for row in rows}
+    venue_game_temperatures = {row.location_datetime: float(row.game_temperature) for row in rows}
     print(f'done read_venue_game_temperatures_bq {start_date_str} to {end_date_str}')
 
     return venue_game_temperatures
