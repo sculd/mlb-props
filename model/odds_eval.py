@@ -12,7 +12,6 @@ def df_prediction_add_odd(df_matchup, regression_model):
     '''
     df_matchup = df_matchup.loc[:,~df_matchup.columns.duplicated()].copy()
     df_prediction = pycaret.classification.predict_model(data = df_matchup, estimator = regression_model)
-    df_prediction = pd.merge(df_prediction, df_player_team_positions[['player_id','player_team_name']], left_on='batting_id', right_on='player_id', how='left')
     df_prediction["theo_odds"] = df_prediction["prediction_score"].apply(model.common.odds_calculator)
     return df_prediction
 
@@ -24,6 +23,7 @@ def merge_df_prediction_over_odds(df_prediction, df_over_odds, target_column, ta
     '''
     df_over_odds = df_over_odds.copy()
     df_over_odds["over_prob"] = df_over_odds["over_odds"].apply(model.common.odds_to_probability)
+    df_over_odds["under_prob"] = df_over_odds["under_odds"].apply(model.common.odds_to_probability)
     df_prediction_odds = df_prediction.set_index(['game_id', 'batting_name']).join(\
         df_over_odds.rename(columns={'player_name': 'batting_name'}).set_index(['game_id', 'batting_name']), lsuffix='', rsuffix='_odds').reset_index()
     df_prediction_odds = df_prediction_odds[df_prediction_odds.over_line < target_line]
