@@ -100,7 +100,6 @@ def write_df_prediction_local_temp(df_prediction, property_column_name):
     json_file_name = f'update_data/temp/df_prediction_{property_column_name}_{date_today}.txt'
     with open(json_file_name, 'w') as jf:
         for _, prediction in df_prediction.iterrows():
-            print(prediction)
             payload = \
                 {
                     "date": prediction.game_date.date(),
@@ -169,6 +168,7 @@ def update_prediction_odds_datastore_between(start_date_str, end_date_str):
         df_prediction_odds_1strikeouts = model.odds_eval.merge_df_prediction_over_odds(df_prediction_1strikeouts, df_odds[df_odds.property == 'Strikeouts'], model.common.target_1hstrikeouts_recorded, 1.0)
     write_df_prediction_odds_datastore(df_prediction_odds_1strikeouts, "batting_1strikeOuts_recorded")
 
+
 def update_prediction_bq_between(start_date_str, end_date_str):
     print(f'update_prediction_bq_between {start_date_str} {end_date_str}')
     schedules = collect_data.schedules.fetch_schedule_between(start_date_str, end_date_str)
@@ -182,3 +182,17 @@ def update_prediction_bq_between(start_date_str, end_date_str):
     df_prediction_1strikeouts = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_1hstrikeouts_recorded + [model.common.target_1hstrikeouts_recorded]], _regression_model_1hstrikeouts)
     write_df_prediction_odds_bq(df_prediction_1strikeouts, "batting_1strikeOuts_recorded")
 
+
+def update_prediction_db_between(start_date_str, end_date_str):
+    update_prediction_bq_between(start_date_str, end_date_str)
+    #update_prediction_odds_datastore_between(start_date_str, end_date_str)
+
+def update_prediction_db_ndays_prior(days):
+    date_ndays_prior = (datetime.datetime.today() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    print(f'update_prediction_bq_ndays_prior days: {days}, {date_ndays_prior}')
+    ret = update_prediction_db_between(date_ndays_prior, date_ndays_prior)
+    print(f'done update_prediction_bq_ndays_prior {date_ndays_prior}')
+    return ret
+
+def update_prediction_db_yesterday():
+    return update_prediction_db_ndays_prior(1)

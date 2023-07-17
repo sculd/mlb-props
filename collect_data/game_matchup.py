@@ -359,8 +359,11 @@ def get_df_game_matchup(game_id_list):
         
         df_game_matchups.append(df_game_matchup)
     
-    print(f'cnt_null_matchups: {cnt_null_matchups}')
-    
+    print(f'cnt_null_matchups: {cnt_null_matchups}, df_game_matchups: {len(df_game_matchups)}')
+
+    if len(df_game_matchups) == 0:
+        return None
+
     df_game_matchup = pd.concat(df_game_matchups).reset_index(drop=True) # [Hit_Real_Features].dropna()
     df_game_matchup['game_date'] = pd.to_datetime(df_game_matchup['game_date'])
     df_game_matchup['game_datetime'] = pd.to_datetime(df_game_matchup['game_datetime'])
