@@ -185,7 +185,7 @@ def update_prediction_bq_between(start_date_str, end_date_str):
 
 def update_prediction_db_between(start_date_str, end_date_str):
     update_prediction_bq_between(start_date_str, end_date_str)
-    #update_prediction_odds_datastore_between(start_date_str, end_date_str)
+    update_prediction_odds_datastore_between(start_date_str, end_date_str)
 
 def update_prediction_db_ndays_prior(days):
     date_ndays_prior = (datetime.datetime.today() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
