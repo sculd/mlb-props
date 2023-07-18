@@ -1,5 +1,6 @@
 import datetime, os, json, math
 
+import pytz
 import numpy as np
 from google.cloud import bigquery
 from google.cloud import storage
@@ -105,7 +106,7 @@ def upload_venue_game_temperatures_to_gcs_between(start_date_str, end_date_str):
     return venue_game_temperatures
 
 def upload_venue_game_temperatures_to_gcs_ndays_prior(days):
-    date_ndays_prior = (datetime.datetime.today() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Pacific')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     print(f'upload_venue_game_temperatures_to_gcs_ndays_prior days: {days}, {date_ndays_prior}')
     ret = upload_venue_game_temperatures_to_gcs_between(date_ndays_prior, date_ndays_prior)
     print(f'done upload_venue_game_temperatures_to_gcs_ndays_prior {date_ndays_prior}')
