@@ -5,6 +5,7 @@ if os.path.exists('credential.json'):
 
 import datetime, json, math
 
+import pytz
 import collect_data.schedules
 import collect_data.game_matchup
 import odds_data.query_bq_odds
@@ -187,7 +188,7 @@ def update_prediction_db_between(start_date_str, end_date_str):
     update_prediction_odds_datastore_between(start_date_str, end_date_str)
 
 def update_prediction_db_ndays_prior(days):
-    date_ndays_prior = (datetime.datetime.today() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Pacific')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     print(f'update_prediction_bq_ndays_prior days: {days}, {date_ndays_prior}')
     ret = update_prediction_db_between(date_ndays_prior, date_ndays_prior)
     print(f'done update_prediction_bq_ndays_prior {date_ndays_prior}')
