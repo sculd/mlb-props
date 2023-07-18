@@ -33,7 +33,6 @@ _regression_model_1hstrikeouts = pycaret.classification.load_model(model.common.
 def write_df_prediction_odds_datastore(df_prediction_odds, property_column_name):
     entities = []
     for _, prediction_odds in df_prediction_odds.iterrows():
-        print(prediction_odds)
         key = _ds_client.key("MLBBatterPropPredictionOdds")
         entity = datastore.Entity(key)
         entity_properties = \
