@@ -66,48 +66,48 @@ def get_side_batter_matchup(game_id, side, batter_id, team_boxscore, force_fetch
     # this is the stat aggregated over the `current` season.
     batting_season_stat = game_boxscore[side]['players'][f'ID{batter_id}']['seasonStats']['batting']
 
-    season_batter_stats = {}
-    season_batter_stats["name"] = batter_name
-    season_batter_stats["id"] = batter_id
-    season_batter_stats["teamName"] = team_boxscore["teamName"]
-    season_batter_stats["shortName"] = team_boxscore["shortName"]
+    batter_matchup = {}
+    batter_matchup["name"] = batter_name
+    batter_matchup["id"] = batter_id
+    batter_matchup["teamName"] = team_boxscore["teamName"]
+    batter_matchup["shortName"] = team_boxscore["shortName"]
 
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
-    season_batter_stats['cur_season_avg'] = float(batting_season_stat['avg'])
-    season_batter_stats['cur_season_obp'] = float(batting_season_stat['obp'])
-    season_batter_stats['cur_season_slg'] = float(batting_season_stat['slg'])
-    season_batter_stats['cur_season_ops'] = float(batting_season_stat['ops'])
+    batter_matchup['cur_season_avg'] = float(batting_season_stat['avg'])
+    batter_matchup['cur_season_obp'] = float(batting_season_stat['obp'])
+    batter_matchup['cur_season_slg'] = float(batting_season_stat['slg'])
+    batter_matchup['cur_season_ops'] = float(batting_season_stat['ops'])
 
     # learning targets
-    season_batter_stats["boxscore_hits"] = batting_stat["hits"]
-    season_batter_stats["boxscore_homeRuns"] = batting_stat["homeRuns"]
-    season_batter_stats["boxscore_strikeOuts"] = batting_stat["strikeOuts"]
-    season_batter_stats["boxscore_runs"] = batting_stat["runs"]
-    season_batter_stats["boxscore_stolenBases"] = batting_stat["stolenBases"]
-    season_batter_stats["boxscore_doubles"] = batting_stat["doubles"]
+    batter_matchup["boxscore_hits"] = batting_stat["hits"]
+    batter_matchup["boxscore_homeRuns"] = batting_stat["homeRuns"]
+    batter_matchup["boxscore_strikeOuts"] = batting_stat["strikeOuts"]
+    batter_matchup["boxscore_runs"] = batting_stat["runs"]
+    batter_matchup["boxscore_stolenBases"] = batting_stat["stolenBases"]
+    batter_matchup["boxscore_doubles"] = batting_stat["doubles"]
 
-    season_batter_stats["1hits_recorded"] = 1 if batting_stat["hits"] >= 1 else 0
-    season_batter_stats["2hits_recorded"] = 1 if batting_stat["hits"] >= 2 else 0
-    season_batter_stats["1homeRuns_recorded"] = 1 if batting_stat["homeRuns"] >= 1 else 0
-    season_batter_stats["1strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 1 else 0
-    season_batter_stats["2strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 2 else 0
-    season_batter_stats["1runs_recorded"] = 1 if batting_stat["runs"] >= 1 else 0
-    season_batter_stats["2runs_recorded"] = 1 if batting_stat["runs"] >= 2 else 0
-    season_batter_stats["1stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 1 else 0
-    season_batter_stats["2stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 2 else 0
-    season_batter_stats["1doubles_recorded"] = 1 if batting_stat["doubles"] >= 1 else 0
+    batter_matchup["1hits_recorded"] = 1 if batting_stat["hits"] >= 1 else 0
+    batter_matchup["2hits_recorded"] = 1 if batting_stat["hits"] >= 2 else 0
+    batter_matchup["1homeRuns_recorded"] = 1 if batting_stat["homeRuns"] >= 1 else 0
+    batter_matchup["1strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 1 else 0
+    batter_matchup["2strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 2 else 0
+    batter_matchup["1runs_recorded"] = 1 if batting_stat["runs"] >= 1 else 0
+    batter_matchup["2runs_recorded"] = 1 if batting_stat["runs"] >= 2 else 0
+    batter_matchup["1stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 1 else 0
+    batter_matchup["2stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 2 else 0
+    batter_matchup["1doubles_recorded"] = 1 if batting_stat["doubles"] >= 1 else 0
 
     # last year season stats
     last_year_stat_found = False
     for historical_batter_stat in side_batter_stats:
         if historical_batter_stat["season"] == season_last_year_str:
-            season_batter_stats.update(historical_batter_stat["stats"])
-            season_batter_stats["runs_per_game"] = 1. * season_batter_stats["runs"] / season_batter_stats["gamesPlayed"]
-            season_batter_stats["strikeOuts_per_game"] = 1. * season_batter_stats["strikeOuts"] / season_batter_stats["gamesPlayed"]
-            season_batter_stats["hits_per_game"] = 1. * season_batter_stats["hits"] / season_batter_stats["gamesPlayed"]
+            batter_matchup.update(historical_batter_stat["stats"])
+            batter_matchup["runs_per_game"] = 1. * batter_matchup["runs"] / batter_matchup["gamesPlayed"]
+            batter_matchup["strikeOuts_per_game"] = 1. * batter_matchup["strikeOuts"] / batter_matchup["gamesPlayed"]
+            batter_matchup["hits_per_game"] = 1. * batter_matchup["hits"] / batter_matchup["gamesPlayed"]
             last_year_stat_found = True
 
-    return season_batter_stats if last_year_stat_found else None
+    return batter_matchup if last_year_stat_found else None
 
 
 def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
@@ -129,9 +129,9 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
 
     pitcher_stats_stats = pitcher_stats_data["stats"]
     season_last_year_str = str(int(game["game_date"][0:4]) - 1)
-    season_pitcher_stats = {}
-    season_pitcher_stats["name"] = pitcher_name
-    season_pitcher_stats["id"] = pitcher_id
+    pitcher_matchup = {}
+    pitcher_matchup["name"] = pitcher_name
+    pitcher_matchup["id"] = pitcher_id
 
     game_boxscore = get_boxscore_data(game_id)
     if game_boxscore is None:
@@ -143,27 +143,27 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
         return None
 
     team_boxscore = game_boxscore['teamInfo'][side]
-    season_pitcher_stats["teamName"] = team_boxscore["teamName"]
-    season_pitcher_stats["shortName"] = team_boxscore["shortName"]
+    pitcher_matchup["teamName"] = team_boxscore["teamName"]
+    pitcher_matchup["shortName"] = team_boxscore["shortName"]
 
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
     player_boxscore_season_stats_pitching = game_boxscore[side]['players'][f'ID{pitcher_id}']['seasonStats']['pitching']
-    season_pitcher_stats['cur_season_obp'] = float(player_boxscore_season_stats_pitching['obp'])
-    season_pitcher_stats['cur_hits_per_pitch'] = player_boxscore_season_stats_pitching['hits'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
-    season_pitcher_stats['cur_runs_per_pitch'] = player_boxscore_season_stats_pitching['runs'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
-    season_pitcher_stats['cur_homeRuns_per_pitch'] = player_boxscore_season_stats_pitching['homeRuns'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
-    season_pitcher_stats['cur_strikeOuts_per_pitch'] = player_boxscore_season_stats_pitching['strikeOuts'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    pitcher_matchup['cur_season_obp'] = float(player_boxscore_season_stats_pitching['obp'])
+    pitcher_matchup['cur_hits_per_pitch'] = player_boxscore_season_stats_pitching['hits'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    pitcher_matchup['cur_runs_per_pitch'] = player_boxscore_season_stats_pitching['runs'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    pitcher_matchup['cur_homeRuns_per_pitch'] = player_boxscore_season_stats_pitching['homeRuns'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
+    pitcher_matchup['cur_strikeOuts_per_pitch'] = player_boxscore_season_stats_pitching['strikeOuts'] / player_boxscore_season_stats_pitching['numberOfPitches'] if player_boxscore_season_stats_pitching['numberOfPitches'] > 0 else 0
 
     last_year_stat_found = False
     for historical_pitcher_stat in pitcher_stats_stats:
         if historical_pitcher_stat["season"] == season_last_year_str:
-            season_pitcher_stats.update(historical_pitcher_stat["stats"])
-            season_pitcher_stats["runs_per_game"] = 1. * season_pitcher_stats["runs"] / season_pitcher_stats["gamesPlayed"]
-            season_pitcher_stats["strikeOuts_per_game"] = 1. * season_pitcher_stats["strikeOuts"] / season_pitcher_stats["gamesPlayed"]
-            season_pitcher_stats["hits_per_game"] = 1. * season_pitcher_stats["hits"] / season_pitcher_stats["gamesPlayed"]
+            pitcher_matchup.update(historical_pitcher_stat["stats"])
+            pitcher_matchup["runs_per_game"] = 1. * pitcher_matchup["runs"] / pitcher_matchup["gamesPlayed"]
+            pitcher_matchup["strikeOuts_per_game"] = 1. * pitcher_matchup["strikeOuts"] / pitcher_matchup["gamesPlayed"]
+            pitcher_matchup["hits_per_game"] = 1. * pitcher_matchup["hits"] / pitcher_matchup["gamesPlayed"]
             last_year_stat_found = True
 
-    return season_pitcher_stats if last_year_stat_found else None
+    return pitcher_matchup if last_year_stat_found else None
 
 # side for home or away
 def get_df_side_matchup(game_id, side, force_fetch = False):
