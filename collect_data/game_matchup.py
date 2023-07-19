@@ -27,60 +27,75 @@ def player_name_to_id(player_name):
         return ""
 
 
-def get_side_batter_matchup(game_id, side, batter_player_id, player_boxscore_stats_batting, player_boxscore_season_stats_batting, team_boxscore, force_fetch=False):
+def get_side_batter_matchup(game_id, side, batter_id, team_boxscore, force_fetch=False):
     game = _schedules[game_id]
     if game is None:
         print(f'Failed to get schedule detail for game_id: {game_id}')
         return None
 
-    batter_stats_data = get_player_stat_data(batter_player_id, group="hitting", force_fetch=force_fetch)
+    batter_stats_data = get_player_stat_data(batter_id, group="hitting", force_fetch=force_fetch)
     if batter_stats_data is None:
-        print(f'Error while getting {side} batter {batter_player_id} stat')
+        print(f'Error while getting {side} batter {batter_id} stat')
         return None
 
+    # this is the stat over the past years' seasons, season by season.
     side_batter_stats = batter_stats_data["stats"]
     if len(side_batter_stats) == 0:
         # print(f'{side} batter {side_batter} stat is empty')
         return None
 
     season_last_year_str = str(int(game["game_date"][0:4]) - 1)
-    df_better = df_player_team_positions[df_player_team_positions.player_id == batter_player_id]
+    df_better = df_player_team_positions[df_player_team_positions.player_id == batter_id]
     if len(df_better) == 0:
-        print(f'better name can not be found for {batter_player_id}')
+        print(f'better name can not be found for {batter_id}')
         return None
 
-    batter_player_name = df_better.iloc[0].player_name
+    batter_name = df_better.iloc[0].player_name
+
+    game_boxscore = get_boxscore_data(game_id)
+    if game_boxscore is None:
+        print(f'Failed to get box score for game_id: {game_id}')
+        return None
+
+    if f'ID{batter_id}' not in game_boxscore[side]['players']:
+        print(f'ID{batter_id} not in game_boxscore[{side}]["players"]')
+        return None
+
+    # this is the stat of the specific game
+    batting_stat = game_boxscore[side]['players'][f'ID{batter_id}']['stats']['batting']
+    # this is the stat aggregated over the `current` season.
+    batting_season_stat = game_boxscore[side]['players'][f'ID{batter_id}']['seasonStats']['batting']
 
     season_batter_stats = {}
-    season_batter_stats["name"] = batter_player_name
-    season_batter_stats["id"] = batter_player_id
+    season_batter_stats["name"] = batter_name
+    season_batter_stats["id"] = batter_id
     season_batter_stats["teamName"] = team_boxscore["teamName"]
     season_batter_stats["shortName"] = team_boxscore["shortName"]
 
-    # learning targets
-    season_batter_stats["boxscore_hits"] = player_boxscore_stats_batting["hits"]
-    season_batter_stats["boxscore_homeRuns"] = player_boxscore_stats_batting["homeRuns"]
-    season_batter_stats["boxscore_strikeOuts"] = player_boxscore_stats_batting["strikeOuts"]
-    season_batter_stats["boxscore_runs"] = player_boxscore_stats_batting["runs"]
-    season_batter_stats["boxscore_stolenBases"] = player_boxscore_stats_batting["stolenBases"]
-    season_batter_stats["boxscore_doubles"] = player_boxscore_stats_batting["doubles"]
-
-    season_batter_stats["1hits_recorded"] = 1 if player_boxscore_stats_batting["hits"] >= 1 else 0
-    season_batter_stats["2hits_recorded"] = 1 if player_boxscore_stats_batting["hits"] >= 2 else 0
-    season_batter_stats["1homeRuns_recorded"] = 1 if player_boxscore_stats_batting["homeRuns"] >= 1 else 0
-    season_batter_stats["1strikeOuts_recorded"] = 1 if player_boxscore_stats_batting["strikeOuts"] >= 1 else 0
-    season_batter_stats["2strikeOuts_recorded"] = 1 if player_boxscore_stats_batting["strikeOuts"] >= 2 else 0
-    season_batter_stats["1runs_recorded"] = 1 if player_boxscore_stats_batting["runs"] >= 1 else 0
-    season_batter_stats["2runs_recorded"] = 1 if player_boxscore_stats_batting["runs"] >= 2 else 0
-    season_batter_stats["1stolenBases_recorded"] = 1 if player_boxscore_stats_batting["stolenBases"] >= 1 else 0
-    season_batter_stats["2stolenBases_recorded"] = 1 if player_boxscore_stats_batting["stolenBases"] >= 2 else 0
-    season_batter_stats["1doubles_recorded"] = 1 if player_boxscore_stats_batting["doubles"] >= 1 else 0
-
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
-    season_batter_stats['cur_season_avg'] = float(player_boxscore_season_stats_batting['avg'])
-    season_batter_stats['cur_season_obp'] = float(player_boxscore_season_stats_batting['obp'])
-    season_batter_stats['cur_season_slg'] = float(player_boxscore_season_stats_batting['slg'])
-    season_batter_stats['cur_season_ops'] = float(player_boxscore_season_stats_batting['ops'])
+    season_batter_stats['cur_season_avg'] = float(batting_season_stat['avg'])
+    season_batter_stats['cur_season_obp'] = float(batting_season_stat['obp'])
+    season_batter_stats['cur_season_slg'] = float(batting_season_stat['slg'])
+    season_batter_stats['cur_season_ops'] = float(batting_season_stat['ops'])
+
+    # learning targets
+    season_batter_stats["boxscore_hits"] = batting_stat["hits"]
+    season_batter_stats["boxscore_homeRuns"] = batting_stat["homeRuns"]
+    season_batter_stats["boxscore_strikeOuts"] = batting_stat["strikeOuts"]
+    season_batter_stats["boxscore_runs"] = batting_stat["runs"]
+    season_batter_stats["boxscore_stolenBases"] = batting_stat["stolenBases"]
+    season_batter_stats["boxscore_doubles"] = batting_stat["doubles"]
+
+    season_batter_stats["1hits_recorded"] = 1 if batting_stat["hits"] >= 1 else 0
+    season_batter_stats["2hits_recorded"] = 1 if batting_stat["hits"] >= 2 else 0
+    season_batter_stats["1homeRuns_recorded"] = 1 if batting_stat["homeRuns"] >= 1 else 0
+    season_batter_stats["1strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 1 else 0
+    season_batter_stats["2strikeOuts_recorded"] = 1 if batting_stat["strikeOuts"] >= 2 else 0
+    season_batter_stats["1runs_recorded"] = 1 if batting_stat["runs"] >= 1 else 0
+    season_batter_stats["2runs_recorded"] = 1 if batting_stat["runs"] >= 2 else 0
+    season_batter_stats["1stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 1 else 0
+    season_batter_stats["2stolenBases_recorded"] = 1 if batting_stat["stolenBases"] >= 2 else 0
+    season_batter_stats["1doubles_recorded"] = 1 if batting_stat["doubles"] >= 1 else 0
 
     # last year season stats
     last_year_stat_found = False
@@ -127,6 +142,10 @@ def get_side_pitcher_matchup_for_game(game_id, side, force_fetch=False):
         print(f'ID{pitcher_id} not in game_boxscore[{side}]["players"]')
         return None
 
+    team_boxscore = game_boxscore['teamInfo'][side]
+    season_pitcher_stats["teamName"] = team_boxscore["teamName"]
+    season_pitcher_stats["shortName"] = team_boxscore["shortName"]
+
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
     player_boxscore_season_stats_pitching = game_boxscore[side]['players'][f'ID{pitcher_id}']['seasonStats']['pitching']
     season_pitcher_stats['cur_season_obp'] = float(player_boxscore_season_stats_pitching['obp'])
@@ -169,8 +188,6 @@ def get_df_side_matchup(game_id, side, force_fetch = False):
         # player_boxscore_stats_batting, player_boxscore_season_stats_batting
         side_batter_matchup = get_side_batter_matchup(
             game_id, side, side_batter_id,
-            game_boxscore[side]['players'][f'ID{side_batter_id}']['stats']['batting'],
-            game_boxscore[side]['players'][f'ID{side_batter_id}']['seasonStats']['batting'],
             game_boxscore['teamInfo'][side],
             force_fetch=force_fetch)
         if side_batter_matchup is None:
