@@ -85,7 +85,7 @@ class NpEncoder(json.JSONEncoder):
 
 def write_df_prediction_local_temp(df_prediction, property_column_name):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
-    json_file_name = f'update_data/temp/df_prediction_{property_column_name}_{date_today}.txt'
+    json_file_name = f'update_data/temp/df_live_prediction_{property_column_name}_{date_today}.txt'
     with open(json_file_name, 'w') as jf:
         for _, prediction in df_prediction.iterrows():
             payload = \
