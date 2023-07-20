@@ -21,9 +21,9 @@ import numpy as np
 
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
-bq_table_id = "live_prediction_batter_prop_copy"
+bq_table_id = "live_prediction_batter_prop"
 bq_table_full_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
-ds_entity_type = "MLBBatterPropPredictionOdds_copy"
+ds_entity_type = "MLBBatterPropPredictionOdds"
 
 _ds_client = datastore.Client()
 _sd_write_size_batch = 30

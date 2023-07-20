@@ -6,5 +6,6 @@ if os.path.exists('credential.json'):
 
 import update_data.venue_game_temperatures
 venue_game_temperatures = update_data.venue_game_temperatures.upload_venue_game_temperatures_to_gcs_yesterday()
+
 print(f'venue_game_temperatures: {len(venue_game_temperatures)}')
 
