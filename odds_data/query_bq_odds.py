@@ -40,6 +40,7 @@ def read_df_property_query(query):
     if len(df_odds) == 0:
         return df_odds
 
+    df_odds['game_date'] = pd.to_datetime(df_odds['game_date'])
     df_odds['game_id'] = df_odds.game_id.astype(np.int32)
     return df_odds
 
