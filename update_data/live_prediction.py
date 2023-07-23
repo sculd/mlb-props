@@ -17,7 +17,7 @@ from google.cloud import datastore
 from google.cloud import bigquery
 import update_data.common
 
-import numpy as np
+import pandas as pd, numpy as np
 
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
@@ -30,6 +30,8 @@ _sd_write_size_batch = 30
 
 _regression_model_1hits = pycaret.classification.load_model(model.common.model_1hits_file_name)
 _regression_model_1hstrikeouts = pycaret.classification.load_model(model.common.model_1hstrikeouts_file_name)
+
+_bq_client = bigquery.Client()
 
 
 def write_df_prediction_datastore(df_prediction_odds, property_column_name):
@@ -92,15 +94,19 @@ def write_df_prediction_local_temp(df_prediction, property_column_name):
                     "prediction_label": prediction.prediction_label,
                     "prediction_score": prediction.prediction_score,
                     "theo_odds": prediction.theo_odds,
+
+                    "batting_teamName": prediction.batting_teamName,
+                    "batting_shortName": prediction.batting_shortName,
+                    "ingestion_datetime": datetime.datetime.now(),
                 }
 
             jf.write(json.dumps(payload, cls=update_data.common.NpEncoder) + '\n')
 
-    return json_file_name
+    return json_file_name, pkl_file_name
 
 def write_df_prediction_bq(df_prediction, property_column_name):
-    pkl_file_name, json_file_name = write_df_prediction_local_temp(df_prediction, property_column_name)
-    print(f'{pkl_file_name}\n{json_file_name}')
+    json_file_name, pkl_file_name = write_df_prediction_local_temp(df_prediction, property_column_name)
+    print(f'{json_file_name}\n{pkl_file_name}')
     schema = \
         [
             bigquery.SchemaField("date", "DATE", "REQUIRED"),
@@ -114,9 +120,12 @@ def write_df_prediction_bq(df_prediction, property_column_name):
             bigquery.SchemaField("prediction_label", "INTEGER", "REQUIRED"),
             bigquery.SchemaField("prediction_score", "FLOAT", "REQUIRED"),
             bigquery.SchemaField("theo_odds", "INTEGER", "REQUIRED"),
+            bigquery.SchemaField("batting_teamName", "STRING"),
+            bigquery.SchemaField("batting_shortName", "STRING"),
+            bigquery.SchemaField("ingestion_datetime", "DATETIME"),
         ]
     update_data.common.upload_newline_delimited_json_file_to_gcs_then_import_bq(
-        json_file_name, bq_table_full_id, schema,
+        json_file_name, bq_table_full_id, schema, rewrite=True
     )
 
 
@@ -164,3 +173,34 @@ def update_prediction_db_yesterday():
 
 def update_prediction_db_today():
     return update_prediction_db_ndays_prior(0)
+
+def read_df_prediction_bq_between(start_date_str, end_date_str):
+    print(f'read_df_prediction_bq_between {start_date_str} and {end_date_str}')
+
+    query = f"""
+        SELECT * 
+        FROM `trading-290017.major_league_baseball.live_prediction_batter_prop`
+        where date >= "{start_date_str}" AND date <= "{end_date_str}"
+        """
+    print(f'running bq query\b{query}')
+
+    query_job = _bq_client.query(query)
+    rows = query_job.result()  # Waits for query to finish
+    row_dicts = []
+    for row in query_job:
+        # Row values can be accessed by field name or index.
+        row_dict = {k: v for k, v in row.items()}
+        row_dicts.append(row_dict)
+
+    df_live_prediction = pd.DataFrame(row_dicts)
+    print(f'done read_rediction_bq_between {start_date_str} to {end_date_str}')
+
+    return df_live_prediction
+
+def read_df_prediction_bq_today():
+    print(f'read_df_prediction_bq_today')
+    date_str_today = datetime.datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
+    return read_df_prediction_bq_between(date_str_today, date_str_today)
+
+
+
