@@ -12,29 +12,29 @@ gs_bucket_name = "major-league-baseball"
 _storage_client = storage.Client()
 _bq_client = bigquery.Client()
 
-def upload_file_to_gcs(filename, rewrite=False):
+def upload_file_to_gcs(local_filename, gcs_filename, rewrite=False):
     # uoload the file to gcs
-    if storage.Blob(bucket=_storage_client.bucket(gs_bucket_name), name=filename).exists(_storage_client):
+    if storage.Blob(bucket=_storage_client.bucket(gs_bucket_name), name=gcs_filename).exists(_storage_client):
         if rewrite:
             bucket = _storage_client.bucket(gs_bucket_name)
-            blob = bucket.blob(filename)
+            blob = bucket.blob(gcs_filename)
             blob.delete(if_generation_match=None)
         else:
-            print(f'{filename} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
+            print(f'{gcs_filename} already present in the bucket {gs_bucket_name} thus not proceeding further for {property}')
             return False
 
     bucket = _storage_client.bucket(gs_bucket_name)
-    blob = bucket.blob(filename)
+    blob = bucket.blob(gcs_filename)
     generation_match_precondition = 0
-    blob.upload_from_filename(filename, if_generation_match=generation_match_precondition)
+    blob.upload_from_filename(local_filename, if_generation_match=generation_match_precondition)
 
     print(
-        f"File {filename} uploaded to {filename}."
+        f"File {local_filename} uploaded to {gcs_filename}."
     )
     return True
 
 def upload_newline_delimited_json_file_to_gcs_then_import_bq(json_filename, bq_table_id, bq_schema, rewrite=False):
-    if not upload_file_to_gcs(json_filename, rewrite=rewrite):
+    if not upload_file_to_gcs(json_filename, json_filename, rewrite=rewrite):
         return
 
     job_config = bigquery.LoadJobConfig(
@@ -51,9 +51,6 @@ def upload_newline_delimited_json_file_to_gcs_then_import_bq(json_filename, bq_t
     )
     load_job.result()  # Waits for the job to complete.
     print(f'bq import from {json_filename} done')
-
-def upload_pkl_file_to_gcs(pkl_filename, rewrite=False):
-    upload_file_to_gcs(pkl_filename, rewrite=rewrite)
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):

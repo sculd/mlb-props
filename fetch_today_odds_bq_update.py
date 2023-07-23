@@ -17,8 +17,14 @@ bq_dataset_id = "major_league_baseball"
 bq_table_id = "odds_batter_prop"
 bq_table_full_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
-def upload_df_odds_to_gcs_bq(df_odds, property):
+def upload_df_today_odds_to_gcs_bq(df_odds, property):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
+    pkl_file_name = f'odds_data/odds_{property}_{date_today}.pkl'
+    df_odds.to_pickle(pkl_file_name)
+
+    pkl_gcs_file_name = f'odds_data/odds_{property}.pkl'
+    update_data.common.upload_file_to_gcs(pkl_file_name, pkl_gcs_file_name, rewrite=True)
+
     json_file_name = f'odds_data/odds_{property}_{date_today}.txt'
     with open(json_file_name, 'w') as jf:
         for _, row in df_odds.iterrows():
@@ -55,25 +61,25 @@ print(f"{fetch_print_prefix}fetch today's odds")
 
 df_odds_hits = odds_data.odds_hits.fetch_df_hits_odd_today()
 print(f'df_odds_hits\n{df_odds_hits}')
-upload_df_odds_to_gcs_bq(df_odds_hits, "hits")
+upload_df_today_odds_to_gcs_bq(df_odds_hits, "hits")
 
 df_odds_runs = odds_data.odds_runs.fetch_df_runs_odd_today()
 print(f'df_odds_runs\n{df_odds_runs}')
-upload_df_odds_to_gcs_bq(df_odds_runs, "runs")
+upload_df_today_odds_to_gcs_bq(df_odds_runs, "runs")
 
 df_odds_homeruns = odds_data.odds_homeruns.fetch_df_homeruns_odd_today()
 print(f'df_odds_homeruns\n{df_odds_homeruns}')
-upload_df_odds_to_gcs_bq(df_odds_homeruns, "homeruns")
+upload_df_today_odds_to_gcs_bq(df_odds_homeruns, "homeruns")
 
 df_odds_strikeouts = odds_data.odds_strikeouts.fetch_df_strikeouts_odd_today()
 print(f'df_odds_strikeouts\n{df_odds_strikeouts}')
-upload_df_odds_to_gcs_bq(df_odds_strikeouts, "strikeouts")
+upload_df_today_odds_to_gcs_bq(df_odds_strikeouts, "strikeouts")
 
 df_odds_doubles = odds_data.odds_doubles.fetch_df_doubles_odd_today()
 print(f'df_odds_doubles\n{df_odds_doubles}')
-upload_df_odds_to_gcs_bq(df_odds_doubles, "doubles")
+upload_df_today_odds_to_gcs_bq(df_odds_doubles, "doubles")
 
 df_odds_stolenbases = odds_data.odds_stolenbases.fetch_df_stolenbases_odd_today()
 print(f'df_odds_stolenbases\n{df_odds_stolenbases}')
-upload_df_odds_to_gcs_bq(df_odds_stolenbases, "stolenbases")
+upload_df_today_odds_to_gcs_bq(df_odds_stolenbases, "stolenbases")
 
