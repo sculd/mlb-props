@@ -21,9 +21,8 @@ def upload_df_today_odds_to_gcs_bq(df_odds, property):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     pkl_file_name = f'odds_data/odds_{property}_{date_today}.pkl'
     df_odds.to_pickle(pkl_file_name)
-
-    pkl_gcs_file_name = f'odds_data/odds_{property}.pkl'
-    update_data.common.upload_file_to_gcs(pkl_file_name, pkl_gcs_file_name, rewrite=True)
+    pkl_gcs_public_file_name = f'odds_data/odds_{property}.pkl'
+    update_data.common.upload_file_to_public_gcs(pkl_file_name, pkl_gcs_public_file_name, rewrite=True)
 
     json_file_name = f'odds_data/odds_{property}_{date_today}.txt'
     with open(json_file_name, 'w') as jf:

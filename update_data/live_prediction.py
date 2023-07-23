@@ -75,8 +75,8 @@ def write_df_prediction_local_temp(df_prediction, property_column_name):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     pkl_file_name = f'update_data/temp/df_live_prediction_{property_column_name}_{date_today}.pkl'
     df_prediction.to_pickle(pkl_file_name)
-    pkl_gcs_file_name = f'update_data/temp/df_live_prediction_{property_column_name}.pkl'
-    update_data.common.upload_file_to_gcs(pkl_file_name, pkl_gcs_file_name, rewrite=True)
+    pkl_gcs_public_file_name = f'update_data/temp/df_live_prediction_{property_column_name}.pkl'
+    update_data.common.upload_file_to_public_gcs(pkl_file_name, pkl_gcs_public_file_name, rewrite=True)
 
     json_file_name = f'update_data/temp/df_live_prediction_{property_column_name}_{date_today}.txt'
     with open(json_file_name, 'w') as jf:
