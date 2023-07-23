@@ -1,4 +1,6 @@
 import pandas as pd, numpy as np
+import datetime
+import pytz
 
 from google.cloud import bigquery
 
@@ -46,7 +48,7 @@ def read_df_property_query(query):
 
     df_odds['game_date'] = pd.to_datetime(df_odds['game_date'])
     df_odds['game_id'] = df_odds.game_id.astype(np.int32)
-    df_odds = df_odds.sort_values(["game_date", "team_away", "team_home", "batting_name", "ingested_datetime"]).drop_duplicates(["game_id", "team_away", "team_home", "batting_name", "property"])
+    df_odds = df_odds.sort_values(["game_date", "team_away", "team_home", "player_name", "ingested_datetime"]).drop_duplicates(["game_id", "team_away", "team_home", "player_name", "property"])
     return df_odds
 
 def read_df_property_between(start_date_str, end_date_str, property = 'all'):
@@ -59,6 +61,10 @@ def read_df_property_between(start_date_str, end_date_str, property = 'all'):
     query_formatted = _query.format(clause_property=clause_property, clause_date = clause_date)
     return read_df_property_query(query_formatted)
 
+def read_df_property_today(property = 'all'):
+    date_str_today = datetime.datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
+    return read_df_property_between(date_str_today, date_str_today, property=property)
+
 def read_df_property_date(date_str, property = 'all'):
     return read_df_property_between(date_str, date_str, property=property)
 
@@ -70,6 +76,11 @@ def read_df_property_2023(property = 'all'):
 
     query_formatted = _query.format(clause_property=clause_property, clause_date = _clause_date_2023)
     return read_df_property_query(query_formatted)
+
+def download_property_today(property = 'all'):
+    df_odds = read_df_property_today(property = property)
+    df_odds.to_pickle(f'odds_data/df_odds_today_{property}.pkl')
+    return df_odds
 
 def download_property_between(start_date_str, end_date_str, property = 'all'):
     df_odds = read_df_property_between(start_date_str, end_date_str, property = property)
