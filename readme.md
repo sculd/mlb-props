@@ -15,9 +15,13 @@ My fork [here|https://github.com/sculd/mlb-props].
 * `model_training_run.ipynb` trains a model.
 * `update_data_run.py` should run at the beginning of each day, fetching the previous date's matchup and updating all the data.
 * `fetch_today_matchup_and_odds_run.py` should run at the beginning of each day, this creates matchup for today's live bet and fetches the odds for today's games.
-* add this line `0 8 * * * /home/junlim/projects/mlb-props/daily_run.sh` to crontab to run it every 8am daily.
-* add this line `0 10 * * * /home/junlim/projects/mlb-props/daily_live_run.sh` to crontab to run it every 10am daily.
 
+```
+$ crontab -l
+0 12-20 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_odds_update_run.sh
+0 12 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_run.sh
+0 14 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_live_run.sh
+```
 
 The odds fetch is hosted in the gcp vm (sandbox(2)), and updated to `trading-290017.major_league_baseball.odds_hit_recorded` table.
 
@@ -36,12 +40,12 @@ from static_data.load_static_data import *
 ```python
 collect_data_Base_dir = 'collect_data'
 df_game_matchup_total = pd.read_pickle(f'{collect_data_Base_dir}/df_game_matchup_total.pkl')
-test_data = df_game_matchup_total[(df_game_matchup_total.game_date > "2022-12-01")][model.common.features]
+test_data = df_game_matchup_total[(df_game_matchup_total.game_date > "2022-12-01")][model.common.features_1hits_recorded]
 ```
 
 
 ```python
-regression_model = pycaret.classification.load_model(model.common.model_file_name)
+regression_model = pycaret.classification.load_model(model.common.model_1hits_file_name)
 ```
 
     Transformation Pipeline and Model Successfully Loaded
@@ -58,16 +62,16 @@ test_prediction["theo_odds"] = test_prediction["prediction_score"].apply(model.c
 ```python
 def get_eval_profile(df_prediction, score_threshold):
     confident_prediction = df_prediction[(df_prediction["prediction_score"] >= score_threshold) & (df_prediction["prediction_label"] == 1)].sort_values(by = "prediction_score", ascending = False).drop_duplicates("batting_name")
-    confident_prediction[['game_date', "batting_name", "batting_hit_recorded",	"prediction_score", "player_team_name", "theo_odds"]]
+    confident_prediction[['game_date', "batting_name", "batting_1hits_recorded",	"prediction_score", "player_team_name", "theo_odds"]]
     l =len(confident_prediction)
-    return l, confident_prediction.batting_hit_recorded.sum() / l
+    return l, confident_prediction.batting_1hits_recorded.sum() / l
 ```
 
 
 ```python
 score_threshold = 0.75
 confident_test_prediction = test_prediction[(test_prediction["prediction_score"] >= score_threshold) & (test_prediction["prediction_label"] == 1)].sort_values(by = "prediction_score", ascending = False).drop_duplicates("batting_name")
-confident_test_prediction[['game_date', "batting_name", "batting_hit_recorded",	"prediction_score", "player_team_name", "theo_odds"]]
+confident_test_prediction[['game_date', "batting_name", "batting_1hits_recorded",	"prediction_score", "player_team_name", "theo_odds"]]
 ```
 
 
@@ -93,7 +97,7 @@ confident_test_prediction[['game_date', "batting_name", "batting_hit_recorded",	
       <th></th>
       <th>game_date</th>
       <th>batting_name</th>
-      <th>batting_hit_recorded</th>
+      <th>batting_1hits_recorded</th>
       <th>prediction_score</th>
       <th>player_team_name</th>
       <th>theo_odds</th>
@@ -101,49 +105,49 @@ confident_test_prediction[['game_date', "batting_name", "batting_hit_recorded",	
   </thead>
   <tbody>
     <tr>
-      <th>23933</th>
-      <td>2023-05-25</td>
-      <td>Randal Grichuk</td>
+      <th>1276</th>
+      <td>2023-04-03</td>
+      <td>Paul Goldschmidt</td>
       <td>1</td>
-      <td>0.91</td>
-      <td>Colorado Rockies</td>
-      <td>-1011</td>
+      <td>0.9856</td>
+      <td>Arizona Diamondbacks</td>
+      <td>-6844</td>
     </tr>
     <tr>
-      <th>16151</th>
-      <td>2023-05-07</td>
-      <td>Freddie Freeman</td>
+      <th>1085</th>
+      <td>2023-04-03</td>
+      <td>Dansby Swanson</td>
       <td>1</td>
-      <td>0.90</td>
+      <td>0.9799</td>
       <td>Atlanta Braves</td>
-      <td>-900</td>
+      <td>-4875</td>
     </tr>
     <tr>
-      <th>7494</th>
-      <td>2023-04-17</td>
-      <td>Shohei Ohtani</td>
+      <th>705</th>
+      <td>2023-04-02</td>
+      <td>Willson Contreras</td>
       <td>1</td>
-      <td>0.88</td>
-      <td>Los Angeles Angels</td>
-      <td>-733</td>
+      <td>0.9774</td>
+      <td>Chicago Cubs</td>
+      <td>-4325</td>
     </tr>
     <tr>
-      <th>9918</th>
-      <td>2023-04-22</td>
+      <th>235</th>
+      <td>2023-04-01</td>
       <td>Rafael Devers</td>
       <td>1</td>
-      <td>0.88</td>
+      <td>0.9760</td>
       <td>Boston Red Sox</td>
-      <td>-733</td>
+      <td>-4067</td>
     </tr>
     <tr>
-      <th>25906</th>
-      <td>2023-06-03</td>
-      <td>Nico Hoerner</td>
+      <th>790</th>
+      <td>2023-04-02</td>
+      <td>Taylor Ward</td>
       <td>1</td>
-      <td>0.88</td>
-      <td>Chicago Cubs</td>
-      <td>-733</td>
+      <td>0.9728</td>
+      <td>Los Angeles Angels</td>
+      <td>-3576</td>
     </tr>
     <tr>
       <th>...</th>
@@ -155,53 +159,53 @@ confident_test_prediction[['game_date', "batting_name", "batting_hit_recorded",	
       <td>...</td>
     </tr>
     <tr>
-      <th>22095</th>
-      <td>2023-05-23</td>
-      <td>Anthony Santander</td>
+      <th>9965</th>
+      <td>2023-04-22</td>
+      <td>Teoscar Hernandez</td>
       <td>1</td>
-      <td>0.75</td>
-      <td>Baltimore Orioles</td>
-      <td>-300</td>
+      <td>0.7524</td>
+      <td>Seattle Mariners</td>
+      <td>-304</td>
     </tr>
     <tr>
-      <th>17950</th>
-      <td>2023-05-12</td>
-      <td>Marcus Semien</td>
-      <td>1</td>
-      <td>0.75</td>
-      <td>Oakland Athletics</td>
-      <td>-300</td>
+      <th>25214</th>
+      <td>2023-05-31</td>
+      <td>Ildemaro Vargas</td>
+      <td>0</td>
+      <td>0.7522</td>
+      <td>Arizona Diamondbacks</td>
+      <td>-304</td>
     </tr>
     <tr>
-      <th>15338</th>
-      <td>2023-05-06</td>
-      <td>C.J. Cron</td>
+      <th>9631</th>
+      <td>2023-04-22</td>
+      <td>Josh Bell</td>
       <td>1</td>
-      <td>0.75</td>
-      <td>Colorado Rockies</td>
-      <td>-300</td>
+      <td>0.7520</td>
+      <td>Cleveland Guardians</td>
+      <td>-303</td>
     </tr>
     <tr>
-      <th>11867</th>
-      <td>2023-04-27</td>
-      <td>Trey Mancini</td>
+      <th>1832</th>
+      <td>2023-04-04</td>
+      <td>Eddie Rosario</td>
       <td>1</td>
-      <td>0.75</td>
-      <td>Chicago Cubs</td>
-      <td>-300</td>
+      <td>0.7506</td>
+      <td>Minnesota Twins</td>
+      <td>-301</td>
     </tr>
     <tr>
-      <th>11901</th>
-      <td>2023-04-27</td>
-      <td>Xander Bogaerts</td>
+      <th>9734</th>
+      <td>2023-04-22</td>
+      <td>Ke'Bryan Hayes</td>
       <td>1</td>
-      <td>0.75</td>
-      <td>San Diego Padres</td>
-      <td>-300</td>
+      <td>0.7506</td>
+      <td>Pittsburgh Pirates</td>
+      <td>-301</td>
     </tr>
   </tbody>
 </table>
-<p>61 rows × 6 columns</p>
+<p>262 rows × 6 columns</p>
 </div>
 
 
@@ -217,11 +221,11 @@ print(get_eval_profile(test_prediction, 0.80))
 print(get_eval_profile(test_prediction, 0.85))
 ```
 
-    (215, 0.6744186046511628)
-    (105, 0.7238095238095238)
-    (61, 0.8360655737704918)
-    (29, 0.9655172413793104)
-    (10, 1.0)
+    (404, 0.8564356435643564)
+    (325, 0.8738461538461538)
+    (262, 0.8931297709923665)
+    (174, 0.896551724137931)
+    (104, 0.9230769230769231)
 
 
 
