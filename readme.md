@@ -18,7 +18,7 @@ My fork [here|https://github.com/sculd/mlb-props].
 
 ```
 $ crontab -l
-0 12-20 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_odds_update_run.sh
+0 12-20 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_live_update_run.sh
 0 12 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_run.sh
 0 14 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_live_run.sh
 ```
