@@ -32,20 +32,6 @@ job_config = bigquery.LoadJobConfig(
     source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
 )
 
-
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, datetime.date):
-            return obj.isoformat()
-        return super(NpEncoder, self).default(obj)
-
-
 def write_venue_game_local_temp(venue_game_temperatures, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     json_file_name = f'update_data/temp/venue_game_temperatures_{date_today}_{b_i}.txt'
@@ -59,7 +45,7 @@ def write_venue_game_local_temp(venue_game_temperatures, b_i):
                 'game_temperature': game_temperatures,
                 'date': dte,
             }
-            payload_str = json.dumps(payload, cls=NpEncoder)
+            payload_str = json.dumps(payload, cls=update_data.common.NpEncoder)
             if 'nan' in payload_str.lower():
                 continue
             jf.write(payload_str + '\n')
@@ -106,7 +92,7 @@ def upload_venue_game_temperatures_to_gcs_between(start_date_str, end_date_str):
     return venue_game_temperatures
 
 def upload_venue_game_temperatures_to_gcs_ndays_prior(days):
-    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Pacific')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Eastern')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     print(f'upload_venue_game_temperatures_to_gcs_ndays_prior days: {days}, {date_ndays_prior}')
     ret = upload_venue_game_temperatures_to_gcs_between(date_ndays_prior, date_ndays_prior)
     print(f'done upload_venue_game_temperatures_to_gcs_ndays_prior {date_ndays_prior}')

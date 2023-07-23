@@ -21,18 +21,6 @@ table_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
 _bq_client = bigquery.Client()
 
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, datetime.date):
-            return obj.isoformat()
-        return super(NpEncoder, self).default(obj)
-
 
 def write_boxscores_local_temp(boxscores, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
@@ -47,7 +35,7 @@ def write_boxscores_local_temp(boxscores, b_i):
                 'date': dte,
                 'boxscore': boxscore,
             }
-            jf.write(json.dumps(payload, cls=NpEncoder) + '\n')
+            jf.write(json.dumps(payload, cls=update_data.common.NpEncoder) + '\n')
 
     return json_file_name
 
@@ -90,7 +78,7 @@ def upload_boxscores_to_gcs_between(start_date_str, end_date_str):
     return boxscores
 
 def upload_boxscores_to_gcs_ndays_prior(days):
-    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Pacific')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Eastern')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     print(f'upload_boxscores_to_gcs_ndays_prior days: {days}, {date_ndays_prior}')
     ret = upload_boxscores_to_gcs_between(date_ndays_prior, date_ndays_prior)
     print(f'done upload_boxscores_to_gcs_ndays_prior {date_ndays_prior}')

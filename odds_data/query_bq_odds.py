@@ -40,8 +40,13 @@ def read_df_property_query(query):
     if len(df_odds) == 0:
         return df_odds
 
+    # this column name has a typo
+    columns = [c for c in df_odds.columns if c != 'ingested_datettime']
+    df_odds = df_odds[columns]
+
     df_odds['game_date'] = pd.to_datetime(df_odds['game_date'])
     df_odds['game_id'] = df_odds.game_id.astype(np.int32)
+    df_odds = df_odds.sort_values(["game_date", "team_away", "team_home", "batting_name", "ingested_datetime"]).drop_duplicates(["game_id", "team_away", "team_home", "batting_name", "property"])
     return df_odds
 
 def read_df_property_between(start_date_str, end_date_str, property = 'all'):
@@ -66,6 +71,12 @@ def read_df_property_2023(property = 'all'):
     query_formatted = _query.format(clause_property=clause_property, clause_date = _clause_date_2023)
     return read_df_property_query(query_formatted)
 
+def download_property_between(start_date_str, end_date_str, property = 'all'):
+    df_odds = read_df_property_between(start_date_str, end_date_str, property = property)
+    df_odds.to_pickle(f'odds_data/df_odds_{start_date_str}_{end_date_str}_{property}.pkl')
+    return df_odds
+
 def download_property_2023(property = 'all'):
     df_odds = read_df_property_2023(property = property)
-    df_odds.to_pickle(f'odds_data/df_odds_{property}.pkl')
+    df_odds.to_pickle(f'odds_data/df_odds_2023_{property}.pkl')
+    return df_odds

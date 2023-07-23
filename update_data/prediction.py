@@ -81,20 +81,6 @@ def write_df_prediction_odds_datastore(df_prediction_odds, property_column_name)
         _ds_client.put_multi(entities_batch)
 
 
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, datetime.date):
-            return obj.isoformat()
-        if isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        return super(NpEncoder, self).default(obj)
-
 def write_df_prediction_local_temp(df_prediction, property_column_name):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     pkl_file_name = f'update_data/temp/df_prediction_{property_column_name}_{date_today}.pkl'
@@ -121,13 +107,13 @@ def write_df_prediction_local_temp(df_prediction, property_column_name):
                     "theo_odds": prediction.theo_odds,
                 }
 
-            jf.write(json.dumps(payload, cls=NpEncoder) + '\n')
+            jf.write(json.dumps(payload, cls=update_data.common.NpEncoder) + '\n')
 
-    return json_file_name
+    return pkl_file_name, json_file_name
 
 def write_df_prediction_odds_bq(df_prediction, property_column_name):
-    json_file_name = write_df_prediction_local_temp(df_prediction, property_column_name)
-    print(f'{json_file_name}')
+    pkl_file_name, json_file_name = write_df_prediction_local_temp(df_prediction, property_column_name)
+    print(f'{pkl_file_name}\n{json_file_name}')
     schema = \
         [
             bigquery.SchemaField("date", "DATE", "REQUIRED"),
@@ -190,7 +176,7 @@ def update_prediction_db_between(start_date_str, end_date_str):
     update_prediction_odds_datastore_between(start_date_str, end_date_str)
 
 def update_prediction_db_ndays_prior(days):
-    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Pacific')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    date_ndays_prior = (datetime.datetime.now(pytz.timezone('US/Eastern')) - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     print(f'update_prediction_bq_ndays_prior days: {days}, {date_ndays_prior}')
     ret = update_prediction_db_between(date_ndays_prior, date_ndays_prior)
     print(f'done update_prediction_bq_ndays_prior {date_ndays_prior}')

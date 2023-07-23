@@ -20,21 +20,6 @@ table_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 _bq_client = bigquery.Client()
 
 
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, datetime.date):
-            return obj.isoformat()
-        if isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        return super(NpEncoder, self).default(obj)
-
-
 def write_player_stats_to_gcs_one_batch(player_stats, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     json_file_name = f'update_data/temp/player_stats_{date_today}_{b_i}.txt'
@@ -45,7 +30,7 @@ def write_player_stats_to_gcs_one_batch(player_stats, b_i):
                 'ingestion_date': datetime.datetime.now().date(),
                 'player_stat': player_stat,
             }
-            jf.write(json.dumps(payload, cls=NpEncoder) + '\n')
+            jf.write(json.dumps(payload, cls=update_data.common.NpEncoder) + '\n')
 
     # uoload the jsonfied data to gcs
     storage_client = storage.Client()
