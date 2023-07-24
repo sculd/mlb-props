@@ -14,7 +14,7 @@ fetch_print_prefix = "\n### "
 gs_bucket_name = "major-league-baseball"
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
-bq_table_id = "odds_batter_prop"
+bq_table_id = "odds_batter_prop_copy"
 bq_table_full_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
 def upload_df_today_odds_to_gcs_bq(df_odds, property):
@@ -26,6 +26,8 @@ def upload_df_today_odds_to_gcs_bq(df_odds, property):
     with open(json_file_name, 'w') as jf:
         for _, row in df_odds.iterrows():
             dict_odds = row.to_dict()
+            dict_odds["over_odds"] = float(dict_odds["over_odds"])
+            dict_odds["under_odds"] = float(dict_odds["under_odds"])
             dict_odds["ingested_datetime"] = datetime.datetime.now()
             jf.write(json.dumps(dict_odds, cls=update_data.common.NpEncoder) + '\n')
 
