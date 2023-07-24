@@ -17,7 +17,7 @@ from google.cloud import datastore
 from google.cloud import bigquery
 import update_data.common
 
-import numpy as np
+import pandas as pd, numpy as np
 
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
@@ -30,6 +30,7 @@ _sd_write_size_batch = 30
 _regression_model_1hits = pycaret.classification.load_model(model.common.model_1hits_file_name)
 _regression_model_1hstrikeouts = pycaret.classification.load_model(model.common.model_1hstrikeouts_file_name)
 
+_bq_client = bigquery.Client()
 
 def write_df_prediction_odds_datastore(df_prediction_odds, property_column_name):
     entities = []
@@ -184,3 +185,37 @@ def update_prediction_db_ndays_prior(days):
 
 def update_prediction_db_yesterday():
     return update_prediction_db_ndays_prior(1)
+
+def read_df_prediction_bq_between(start_date_str, end_date_str):
+    print(f'read_df_prediction_bq_between {start_date_str} and {end_date_str}')
+
+    query = f"""
+        SELECT * 
+        FROM `trading-290017.major_league_baseball.prediction_batter_prop`
+        where date >= "{start_date_str}" AND date <= "{end_date_str}"
+        """
+    print(f'running bq query\b{query}')
+
+    query_job = _bq_client.query(query)
+    rows = query_job.result()  # Waits for query to finish
+    row_dicts = []
+    for row in query_job:
+        # Row values can be accessed by field name or index.
+        row_dict = {k: v for k, v in row.items()}
+        row_dicts.append(row_dict)
+
+    df_live_prediction = pd.DataFrame(row_dicts)
+    print(f'done read_rediction_bq_between {start_date_str} to {end_date_str}')
+
+    return df_live_prediction
+
+def read_df_prediction_bq_today():
+    print(f'read_df_prediction_bq_today')
+    date_str_today = datetime.datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
+    return read_df_prediction_bq_between(date_str_today, date_str_today)
+
+def read_df_prediction_bq_2023():
+    print(f'read_df_prediction_bq_2023')
+    return read_df_prediction_bq_between("2023-04-01", "2023-12-01")
+
+

@@ -177,8 +177,8 @@ def update_prediction_db_yesterday():
 def update_prediction_db_today():
     return update_prediction_db_ndays_prior(0)
 
-def read_df_prediction_bq_between(start_date_str, end_date_str):
-    print(f'read_df_prediction_bq_between {start_date_str} and {end_date_str}')
+def read_df_live_prediction_bq_between(start_date_str, end_date_str):
+    print(f'read_df_live_prediction_bq_between {start_date_str} and {end_date_str}')
 
     query = f"""
         SELECT * 
@@ -200,10 +200,10 @@ def read_df_prediction_bq_between(start_date_str, end_date_str):
 
     return df_live_prediction
 
-def read_df_prediction_bq_today():
-    print(f'read_df_prediction_bq_today')
+def read_df_live_prediction_bq_today():
+    print(f'read_df_live_prediction_bq_today')
     date_str_today = datetime.datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
-    return read_df_prediction_bq_between(date_str_today, date_str_today)
+    return read_df_live_prediction_bq_between(date_str_today, date_str_today)
 
 
 

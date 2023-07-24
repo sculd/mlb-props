@@ -19,7 +19,7 @@ _clause_property_format = 'property = "{property}"'
 _clause_property_all = "TRUE"
 
 _clause_date_between_format = 'game_date >= "{start_date_str}" AND game_date <= "{end_date_str}"'
-_clause_date_2023 = 'game_date >= "2023-04-01"'
+_clause_date_2023 = 'game_date >= "2023-04-01" AND game_date <= "2023-12-01"'
 
 _query = """
     SELECT * 
