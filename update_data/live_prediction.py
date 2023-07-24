@@ -196,6 +196,8 @@ def read_df_live_prediction_bq_between(start_date_str, end_date_str):
         row_dicts.append(row_dict)
 
     df_live_prediction = pd.DataFrame(row_dicts)
+    dedupe_keys = ["game_id", "pitching_name", "batting_name", "property_name"]
+    df_live_prediction = df_live_prediction.sort_values(dedupe_keys + ["ingestion_datetime"]).drop_duplicates(dedupe_keys, keep='last')
     print(f'done read_rediction_bq_between {start_date_str} to {end_date_str}')
 
     return df_live_prediction
