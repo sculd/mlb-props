@@ -14,7 +14,7 @@ fetch_print_prefix = "\n### "
 gs_bucket_name = "major-league-baseball"
 gcp_project_id = "trading-290017"
 bq_dataset_id = "major_league_baseball"
-bq_table_id = "odds_batter_prop_copy"
+bq_table_id = "odds_batter_prop"
 bq_table_full_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 
 def upload_df_today_odds_to_gcs_bq(df_odds, property):
