@@ -26,6 +26,7 @@ bq_table_full_id = f'{gcp_project_id}.{bq_dataset_id}.{bq_table_id}'
 _sd_write_size_batch = 30
 
 _regression_model_1hits = pycaret.classification.load_model(model.common.model_1hits_file_name)
+_regression_model_2hits = pycaret.classification.load_model(model.common.model_2hits_file_name)
 _regression_model_1hstrikeouts = pycaret.classification.load_model(model.common.model_1hstrikeouts_file_name)
 
 _bq_client = bigquery.Client()
@@ -95,6 +96,9 @@ def update_prediction_bq_between(start_date_str, end_date_str):
 
     df_prediction_1hits = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_1hits_recorded + [model.common.target_1hits_recorded]], _regression_model_1hits)
     write_df_prediction_odds_bq(df_prediction_1hits, "batting_1hits_recorded")
+
+    df_prediction_2hits = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_2hits_recorded + [model.common.target_2hits_recorded]], _regression_model_2hits)
+    write_df_prediction_odds_bq(df_prediction_2hits, "batting_2hits_recorded")
 
     df_prediction_1strikeouts = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_1hstrikeouts_recorded + [model.common.target_1hstrikeouts_recorded]], _regression_model_1hstrikeouts)
     write_df_prediction_odds_bq(df_prediction_1strikeouts, "batting_1strikeOuts_recorded")
