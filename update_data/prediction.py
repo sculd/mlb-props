@@ -139,6 +139,7 @@ def read_df_prediction_bq_between(start_date_str, end_date_str):
     df_prediction = df_prediction.rename(columns={'date': 'game_date'})
     df_prediction['game_date'] = pd.to_datetime(df_prediction['game_date'])
     df_prediction['game_id'] = df_prediction.game_id.astype(np.int32)
+    df_prediction = df_prediction.sort_values(["game_id", "batting_name", "pitching_name", "property_name", "ingestion_datetime"]).drop_duplicates(["game_id", "batting_name", "pitching_name", "property_name"])
     print(f'done read_rediction_bq_between {start_date_str} to {end_date_str}')
 
     return df_prediction
