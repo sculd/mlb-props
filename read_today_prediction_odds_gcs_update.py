@@ -23,11 +23,15 @@ import update_data.live_prediction
 
 df_live_prediction = update_data.live_prediction.read_df_live_prediction_bq_today()
 df_live_prediction_1hits = df_live_prediction[df_live_prediction.property_name == "batting_1hits_recorded"]
+df_live_prediction_2hits = df_live_prediction[df_live_prediction.property_name == "batting_2hits_recorded"]
 df_live_prediction_1strikeouts = df_live_prediction[df_live_prediction.property_name == "batting_1strikeOuts_recorded"]
 pkl_file_name_prediction_1hits = 'update_data/df_live_prediction_batting_1hits_recorded.pkl'
+pkl_file_name_prediction_2hits = 'update_data/df_live_prediction_batting_2hits_recorded.pkl'
 pkl_file_name_prediction_1strikeouts = 'update_data/df_live_prediction_batting_1strikeOuts_recorded.pkl'
 df_live_prediction_1hits.to_pickle(pkl_file_name_prediction_1hits)
+df_live_prediction_2hits.to_pickle(pkl_file_name_prediction_2hits)
 df_live_prediction_1strikeouts.to_pickle(pkl_file_name_prediction_1strikeouts)
 update_data.common.upload_file_to_public_gcs(pkl_file_name_prediction_1hits, pkl_file_name_prediction_1hits, rewrite=True)
+update_data.common.upload_file_to_public_gcs(pkl_file_name_prediction_2hits, pkl_file_name_prediction_2hits, rewrite=True)
 update_data.common.upload_file_to_public_gcs(pkl_file_name_prediction_1strikeouts, pkl_file_name_prediction_1strikeouts, rewrite=True)
 
