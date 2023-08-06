@@ -8,6 +8,8 @@ import datetime, json, math
 import pytz
 import collect_data.schedules
 import collect_data.game_matchup
+import collect_data.game_matchup_upload
+
 import odds_data.query_bq_odds
 import model.common, model.odds_eval
 
@@ -93,6 +95,7 @@ def update_prediction_bq_between(start_date_str, end_date_str):
     print(f'schedules: {len(schedules)}')
 
     df_game_matchup = collect_data.game_matchup.get_df_game_between(start_date_str, end_date_str)
+    collect_data.game_matchup_upload.write_df_matchup_bq(df_game_matchup, is_live=False)
 
     df_prediction_1hits = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_1hits_recorded + [model.common.target_1hits_recorded]], _regression_model_1hits)
     write_df_prediction_odds_bq(df_prediction_1hits, "batting_1hits_recorded")
