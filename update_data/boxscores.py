@@ -25,7 +25,7 @@ _bq_client = bigquery.Client()
 def write_boxscores_local_temp(boxscores, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     json_file_name = f'update_data/temp/boxscore_{date_today}_{b_i}.txt'
-    now =  datetime.datetime.now()
+    now = datetime.datetime.now()
     with open(json_file_name, 'w') as jf:
         for game_id, boxscore in boxscores.items():
             # gameId (not game_id) is part of the boxscore e.g. '2023/05/01/atlmlb-nynmlb-1'
