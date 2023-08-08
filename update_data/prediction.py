@@ -120,14 +120,7 @@ def update_prediction_db_ndays_prior(days):
 def update_prediction_db_yesterday():
     return update_prediction_db_ndays_prior(1)
 
-def read_df_prediction_bq_between(start_date_str, end_date_str):
-    print(f'read_df_prediction_bq_between {start_date_str} and {end_date_str}')
-
-    query = f"""
-        SELECT * 
-        FROM `trading-290017.major_league_baseball.live_prediction_batter_prop`
-        where date >= "{start_date_str}" AND date <= "{end_date_str}"
-        """
+def read_df_prediction_bq_query(query):
     print(f'running bq query\b{query}')
 
     query_job = _bq_client.query(query)
@@ -144,6 +137,32 @@ def read_df_prediction_bq_between(start_date_str, end_date_str):
     df_prediction['game_id'] = df_prediction.game_id.astype(np.int32)
     dedupe_keys = ["game_id", "batting_name", "pitching_name", "property_name"]
     df_prediction = df_prediction.sort_values(dedupe_keys + ["ingestion_datetime"]).drop_duplicates(dedupe_keys, keep='first')
+    print(f'done read_rediction_bq_for query above')
+
+    return df_prediction
+
+def read_df_prediction_bq_between(start_date_str, end_date_str):
+    print(f'read_df_prediction_bq_between {start_date_str} and {end_date_str}')
+
+    query_history = f"""
+        SELECT * 
+        FROM `trading-290017.major_league_baseball.prediction_batter_prop`
+        where date >= "{start_date_str}" AND date <= "{end_date_str}"
+        """
+    print(f'running bq query\n{query_history}')
+    df_prediction_history = read_df_prediction_bq_query(query_history)
+
+    query_live = f"""
+        SELECT * 
+        FROM `trading-290017.major_league_baseball.live_prediction_batter_prop`
+        where date >= "{start_date_str}" AND date <= "{end_date_str}"
+        """
+    print(f'running bq query\n{query_live}')
+    df_prediction_live = read_df_prediction_bq_query(query_live)
+
+    columns_keep = [c for c in list(df_prediction_history.columns) if c != 'property_value']
+    df_prediction = df_prediction_live[columns_keep].merge(df_prediction_history[['game_id', 'pitching_name', 'batting_name', 'property_value']], on=['game_id', 'pitching_name', 'batting_name'], how="left")
+
     print(f'done read_rediction_bq_between {start_date_str} to {end_date_str}')
 
     return df_prediction
