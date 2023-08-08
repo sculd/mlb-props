@@ -25,6 +25,7 @@ _bq_client = bigquery.Client()
 def write_boxscores_local_temp(boxscores, b_i):
     date_today = datetime.datetime.today().strftime("%Y-%m-%d")
     json_file_name = f'update_data/temp/boxscore_{date_today}_{b_i}.txt'
+    now =  datetime.datetime.now()
     with open(json_file_name, 'w') as jf:
         for game_id, boxscore in boxscores.items():
             # gameId (not game_id) is part of the boxscore e.g. '2023/05/01/atlmlb-nynmlb-1'
@@ -34,6 +35,7 @@ def write_boxscores_local_temp(boxscores, b_i):
                 'game_id': game_id,
                 'date': dte,
                 'boxscore': boxscore,
+                "ingestion_datetime": now,
             }
             jf.write(json.dumps(payload, cls=update_data.common.NpEncoder) + '\n')
 
@@ -61,6 +63,7 @@ def upload_boxscores_to_gcs(boxscores):
                 bigquery.SchemaField("game_id", "STRING", "REQUIRED"),
                 bigquery.SchemaField("date", "DATE"),
                 bigquery.SchemaField("boxscore", "JSON", "REQUIRED"),
+                bigquery.SchemaField("ingestion_datetime", "DATETIME"),
             ]
         )
 
