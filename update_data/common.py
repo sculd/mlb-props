@@ -31,7 +31,7 @@ def _upload_file_to_public_gcs_bucket(local_filename, gcs_filename, bucket_name,
     blob.upload_from_filename(local_filename, if_generation_match=generation_match_precondition)
 
     print(
-        f"File {local_filename} uploaded to {gcs_filename}."
+        f"File {local_filename} uploaded to {bucket_name}/{gcs_filename}."
     )
     return True
 
