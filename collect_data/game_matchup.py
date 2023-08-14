@@ -63,6 +63,9 @@ def get_batter_matchup(game_id, side, batter_id, force_fetch=False):
 
     # this is the stat aggregated over the `current` season.
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
+    # update: it turns out the current season boxscore gets updated after the game is done, meaning the boxscore data
+    # collected afterwards has look-ahead bias, so it shouldn't be used in the prediction.
+    # but collect them anyway to reduce the code / db change.
     boxscore_batting_season_stat = game_boxscore[side]['players'][f'ID{batter_id}']['seasonStats']['batting']
     batter_matchup['cur_season_avg'] = float(boxscore_batting_season_stat['avg'])
     batter_matchup['cur_season_obp'] = float(boxscore_batting_season_stat['obp'])
@@ -146,12 +149,16 @@ def get_pitcher_matchup(game_id, side, force_fetch=False):
 
     # this is the stat aggregated over the `current` season.
     # current season stats should come from boxscore not from player stat as otherwise it would be look-ahead bias.
+    # update: it turns out the current season boxscore gets updated after the game is done, meaning the boxscore data
+    # collected afterwards has look-ahead bias, so it shouldn't be used in the prediction.
+    # but collect them anyway to reduce the code / db change.
     boxscore_pitching_season_stat = game_boxscore[side]['players'][f'ID{pitcher_id}']['seasonStats']['pitching']
     pitcher_matchup['cur_season_obp'] = float(boxscore_pitching_season_stat['obp'])
     pitcher_matchup['cur_hits_per_pitch'] = boxscore_pitching_season_stat['hits'] / boxscore_pitching_season_stat['numberOfPitches'] if boxscore_pitching_season_stat['numberOfPitches'] > 0 else 0
     pitcher_matchup['cur_runs_per_pitch'] = boxscore_pitching_season_stat['runs'] / boxscore_pitching_season_stat['numberOfPitches'] if boxscore_pitching_season_stat['numberOfPitches'] > 0 else 0
     pitcher_matchup['cur_homeRuns_per_pitch'] = boxscore_pitching_season_stat['homeRuns'] / boxscore_pitching_season_stat['numberOfPitches'] if boxscore_pitching_season_stat['numberOfPitches'] > 0 else 0
     pitcher_matchup['cur_strikeOuts_per_pitch'] = boxscore_pitching_season_stat['strikeOuts'] / boxscore_pitching_season_stat['numberOfPitches'] if boxscore_pitching_season_stat['numberOfPitches'] > 0 else 0
+    #pitcher_matchup['numberOfPitchesPerDay'] = float(boxscore_pitching_season_stat['numberOfPitches'])
 
     pitcher_stats_data = get_player_stat_data(pitcher_id, group="pitching", force_fetch=force_fetch)
     if pitcher_stats_data is None:

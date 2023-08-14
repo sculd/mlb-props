@@ -87,7 +87,7 @@ def download_property_between(start_date_str, end_date_str, property = 'all'):
     df_odds.to_pickle(f'odds_data/df_odds_{start_date_str}_{end_date_str}_{property}.pkl')
     return df_odds
 
-def download_property_2023(property = 'all'):
+def download_df_property_2023(property = 'all'):
     df_odds = read_df_property_2023(property = property)
     df_odds.to_pickle(f'odds_data/df_odds_2023_{property}.pkl')
     return df_odds

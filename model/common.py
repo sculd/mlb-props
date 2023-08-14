@@ -40,14 +40,16 @@ Features = ['pitching_gamesPlayed', 'pitching_gamesStarted', 'pitching_groundOut
 
 ignore_features = ["pitching_id", "batting_id", 'game_date', "game_year", "batting_teamName", "batting_shortName"]
 
+features_cur_season = \
+    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
+    ["batting_cur_season_avg"]
+
 features_common = \
     ["pitching_gamesPlayed", "pitching_runs_per_game", "pitching_strikeOuts_per_game", "pitching_hits_per_game"] + \
-    ["pitching_cur_hits_per_pitch", "pitching_cur_strikeOuts_per_pitch"] + \
     ["pitching_name"] + \
     ["batting_gamesPlayed",  "batting_runs_per_game",  "batting_strikeOuts_per_game",  "batting_hits_per_game", "batting_rbi"] + \
-    ["batting_cur_season_avg"] + \
     ["batting_name"] + \
-    ["temp", "game_venue"] + ignore_features
+    ["temp", "game_venue"] + ignore_features # + features_cur_season # cur season features introduce look-ahead bias.
 
 
 target_1hits_recorded = "batting_1hits_recorded"
