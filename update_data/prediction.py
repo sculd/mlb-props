@@ -167,6 +167,8 @@ def read_df_prediction_bq_between(start_date_str, end_date_str):
 
     print(f'returning historical prediction for read_rediction_bq_between {start_date_str} to {end_date_str}')
 
+    # a good portion of the live predictions have been done with look-ahead bias.
+    # return df_prediction
     return df_prediction_history
 
 def read_df_prediction_bq_today():
