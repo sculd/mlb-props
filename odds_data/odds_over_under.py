@@ -9,7 +9,8 @@ import static_data.load_static_data
 
 
 def fetch_odds_json(subcategory_id):
-    url = f'https://sportsbook-us-ny.draftkings.com//sites/US-NY-SB/api/v5/eventgroups/84240/categories/743/subcategories/{subcategory_id}?format=json'
+    #url = f'https://sportsbook-us-ny.draftkings.com//sites/US-NY-SB/api/v5/eventgroups/84240/categories/743/subcategories/{subcategory_id}?format=json'
+    url = f'https://sportsbook.draftkings.com/sites/US-NJ-SB/api/v5/eventgroups/84240/categories/743/subcategories/{subcategory_id}?format=json'
 
     return requests.get(url).json()
 
