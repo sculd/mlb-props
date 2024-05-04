@@ -19,7 +19,9 @@ _clause_property_format = 'property = "{property}"'
 _clause_property_all = "TRUE"
 
 _clause_date_between_format = 'game_date >= "{start_date_str}" AND game_date <= "{end_date_str}"'
-_clause_date_2023 = 'game_date >= "2023-04-01" AND game_date <= "2023-12-01"'
+
+def _get_date_clause_for_year(year):
+    return f'game_date >= "{year}-04-01" AND game_date <= "{year}-12-01"'
 
 _query = """
     SELECT * 
@@ -68,13 +70,13 @@ def read_df_property_today(property = 'all'):
 def read_df_property_date(date_str, property = 'all'):
     return read_df_property_between(date_str, date_str, property=property)
 
-def read_df_property_2023(property = 'all'):
+def read_df_property_year(year, property = 'all'):
     if property == 'all':
         clause_property = _clause_property_all
     else:
         clause_property = _clause_property_format.format(property=property)
 
-    query_formatted = _query.format(clause_property=clause_property, clause_date = _clause_date_2023)
+    query_formatted = _query.format(clause_property=clause_property, clause_date = _get_date_clause_for_year(year))
     return read_df_property_query(query_formatted)
 
 def download_property_today(property = 'all'):
@@ -87,7 +89,8 @@ def download_property_between(start_date_str, end_date_str, property = 'all'):
     df_odds.to_pickle(f'odds_data/df_odds_{start_date_str}_{end_date_str}_{property}.pkl')
     return df_odds
 
-def download_df_property_2023(property = 'all'):
-    df_odds = read_df_property_2023(property = property)
-    df_odds.to_pickle(f'odds_data/df_odds_2023_{property}.pkl')
+def download_df_property_year(year, property = 'all'):
+    df_odds = read_df_property_year(year, property = property)
+    df_odds.to_pickle(f'odds_data/df_odds_{year}_{property}.pkl')
     return df_odds
+

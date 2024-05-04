@@ -30,6 +30,7 @@ _sd_write_size_batch = 30
 _regression_model_1hits = pycaret.classification.load_model(model.common.model_1hits_file_name)
 _regression_model_2hits = pycaret.classification.load_model(model.common.model_2hits_file_name)
 _regression_model_1hstrikeouts = pycaret.classification.load_model(model.common.model_1hstrikeouts_file_name)
+_regression_model_2hstrikeouts = pycaret.classification.load_model(model.common.model_2hstrikeouts_file_name)
 
 _bq_client = bigquery.Client()
 
@@ -106,6 +107,9 @@ def update_prediction_bq_between(start_date_str, end_date_str):
     df_prediction_1strikeouts = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_1hstrikeouts_recorded + [model.common.target_1hstrikeouts_recorded]], _regression_model_1hstrikeouts)
     write_df_prediction_odds_bq(df_prediction_1strikeouts, "batting_1strikeOuts_recorded")
 
+    df_prediction_2strikeouts = model.odds_eval.df_prediction_add_odd(df_game_matchup[['game_id'] + model.common.features_2hstrikeouts_recorded + [model.common.target_2hstrikeouts_recorded]], _regression_model_2hstrikeouts)
+    write_df_prediction_odds_bq(df_prediction_2strikeouts, "batting_2strikeOuts_recorded")
+
 
 def update_prediction_db_between(start_date_str, end_date_str):
     return update_prediction_bq_between(start_date_str, end_date_str)
@@ -176,8 +180,8 @@ def read_df_prediction_bq_today():
     date_str_today = datetime.datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
     return read_df_prediction_bq_between(date_str_today, date_str_today)
 
-def read_df_prediction_bq_2023():
-    print(f'read_df_prediction_bq_2023')
-    return read_df_prediction_bq_between("2023-04-01", "2023-12-01")
+def read_df_prediction_bq_year(year):
+    print(f'read_df_prediction_bq_{year}')
+    return read_df_prediction_bq_between(f"{year}-04-01", f"{year}-12-01")
 
 
