@@ -147,23 +147,25 @@ def create_models(train_data, target_column_name):
 
 def predict_and_odds(df_data, regression_model):
     df_prediction = pycaret.classification.predict_model(data = df_data, estimator = regression_model)
-    df_prediction = pd.merge(df_prediction, df_player_team_positions[['player_id','player_team_name']], left_on='batting_id', right_on='player_id', how='left')
+    #in case a player has switched the team, the most recent should be picked but the data does not have the timestamp.
+    #df_prediction_team_name_added = pd.merge(df_prediction, df_player_team_positions[['player_id','player_team_name']], left_on='batting_id', right_on='player_id', how='left')
     df_prediction["theo_odds"] = df_prediction["prediction_score"].apply(odds_calculator)
     return df_prediction
 
-def get_eval_profile(df_prediction, score_threshold, target_column):
-    confident_prediction = df_prediction.drop_duplicates("batting_name")
-    confident_prediction = confident_prediction[confident_prediction["prediction_score"] >= score_threshold]
+def get_eval_profile(df_prediction, score_threshold, target_column, target_prediction):
+    #df_prediction = df_prediction.drop_duplicates(["batting_name"])
+    confident_prediction = df_prediction[df_prediction["prediction_score"] >= score_threshold]
     # for some reason, the prediction_label should be separatedly checked. higher score does not always lead to prediction label. (maybe the score stands for both labels).
-    confident_prediction = confident_prediction[confident_prediction["prediction_label"] == 1]
+    confident_prediction = confident_prediction[confident_prediction["prediction_label"] == target_prediction]
     l = len(confident_prediction)
-    return l, round(confident_prediction[target_column].sum() / l, 2)
+    correct_prediction = confident_prediction[confident_prediction[target_column] == target_prediction]
+    return l, round(len(correct_prediction) / l, 2) if l > 0 else 0
 
 def batch_predict_and_odds(data, models):
     return [predict_and_odds(data, model) for model in models]
 
-def evaluate_predictions(model_labels, ths, target_column):
+def evaluate_predictions(model_labels, ths, target_column, target_prediction=1):
     data = [["model"] + ths] + \
-        [[model_label[1]] + [get_eval_profile(model_label[0], th, target_column) for th in ths] for model_label in model_labels]
+        [[model_label[1]] + [get_eval_profile(model_label[0], th, target_column, target_prediction) for th in ths] for model_label in model_labels]
     table = tabulate.tabulate(data, tablefmt='html')
     return table
