@@ -10,15 +10,14 @@ load_dotenv()  # take environment variables from .env.
 import notification.new_confident_predictions
 import notification.telegram
 
-notification.telegram.post_message(
-    notification.new_confident_predictions.get_new_confident_predictions_description(
-        notification.new_confident_predictions.PropertyType.TWO_HITS
-    ))
+message_2_hits = notification.new_confident_predictions.get_new_confident_predictions_description(
+    notification.new_confident_predictions.PropertyType.TWO_HITS
+)
+
+message_2_strikeouts = notification.new_confident_predictions.get_new_confident_predictions_description(
+    notification.new_confident_predictions.PropertyType.TWO_STRIKEOUTS
+)
 
 
-notification.telegram.post_message(
-    notification.new_confident_predictions.get_new_confident_predictions_description(
-        notification.new_confident_predictions.PropertyType.TWO_STRIKEOUTS
-    ))
-
+notification.telegram.post_message(f"{message_2_hits}\n{message_2_strikeouts}")
 

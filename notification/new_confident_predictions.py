@@ -106,5 +106,5 @@ def get_new_confident_predictions_description(property_type: PropertyType) -> st
     new_confident_predictions = latest_confident_predictions - prev_confident_predictions
 
     when = latest_row_dict['ingestion_datetime_hourly'] if latest_row_dict is not None else '(unknown time)'
-    return f"The {property_type} model made {new_confident_predictions} new confident predictions at {when}."
+    return f"{property_type}: {new_confident_predictions} new confident predictions since {when}."
 
