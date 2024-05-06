@@ -18,9 +18,9 @@ My fork [here|https://github.com/sculd/mlb-props].
 
 ```
 $ crontab -l
-0 12-20 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_live_update_run.sh
-0 12 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_run.sh
-0 14 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/daily_cloud_live_run.sh
+0 12-20 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/scripts/daily_cloud_live_update_run.sh
+0 12 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/scripts/daily_cloud_run.sh
+0 14 * * * TZ=US/Eastern /home/sculd3/projects/mlb-props/scripts/daily_cloud_live_run.sh
 ```
 
 The odds fetch is hosted in the gcp vm (sandbox(2)), and updated to `trading-290017.major_league_baseball.odds_hit_recorded` table.
@@ -105,49 +105,49 @@ confident_test_prediction[['game_date', "batting_name", "batting_1hits_recorded"
   </thead>
   <tbody>
     <tr>
-      <th>1276</th>
-      <td>2023-04-03</td>
-      <td>Paul Goldschmidt</td>
+      <th>42563</th>
+      <td>2023-08-24</td>
+      <td>Bo Bichette</td>
       <td>1</td>
-      <td>0.9856</td>
-      <td>Arizona Diamondbacks</td>
-      <td>-6844</td>
+      <td>0.8700</td>
+      <td>Toronto Blue Jays</td>
+      <td>-669</td>
     </tr>
     <tr>
-      <th>1085</th>
-      <td>2023-04-03</td>
-      <td>Dansby Swanson</td>
+      <th>23804</th>
+      <td>2023-05-24</td>
+      <td>Freddie Freeman</td>
       <td>1</td>
-      <td>0.9799</td>
-      <td>Atlanta Braves</td>
-      <td>-4875</td>
+      <td>0.8500</td>
+      <td>Los Angeles Dodgers</td>
+      <td>-567</td>
     </tr>
     <tr>
-      <th>705</th>
-      <td>2023-04-02</td>
-      <td>Willson Contreras</td>
+      <th>35560</th>
+      <td>2023-08-02</td>
+      <td>Xander Bogaerts</td>
       <td>1</td>
-      <td>0.9774</td>
-      <td>Chicago Cubs</td>
-      <td>-4325</td>
+      <td>0.8467</td>
+      <td>San Diego Padres</td>
+      <td>-552</td>
     </tr>
     <tr>
-      <th>235</th>
-      <td>2023-04-01</td>
-      <td>Rafael Devers</td>
+      <th>30734</th>
+      <td>2023-06-17</td>
+      <td>Mike Trout</td>
       <td>1</td>
-      <td>0.9760</td>
-      <td>Boston Red Sox</td>
-      <td>-4067</td>
-    </tr>
-    <tr>
-      <th>790</th>
-      <td>2023-04-02</td>
-      <td>Taylor Ward</td>
-      <td>1</td>
-      <td>0.9728</td>
+      <td>0.8400</td>
       <td>Los Angeles Angels</td>
-      <td>-3576</td>
+      <td>-525</td>
+    </tr>
+    <tr>
+      <th>54231</th>
+      <td>2023-10-22</td>
+      <td>Marcus Semien</td>
+      <td>1</td>
+      <td>0.8300</td>
+      <td>Toronto Blue Jays</td>
+      <td>-488</td>
     </tr>
     <tr>
       <th>...</th>
@@ -159,53 +159,53 @@ confident_test_prediction[['game_date', "batting_name", "batting_1hits_recorded"
       <td>...</td>
     </tr>
     <tr>
-      <th>9965</th>
-      <td>2023-04-22</td>
-      <td>Teoscar Hernandez</td>
+      <th>33028</th>
+      <td>2023-07-02</td>
+      <td>Elehuris Montero</td>
       <td>1</td>
-      <td>0.7524</td>
-      <td>Seattle Mariners</td>
-      <td>-304</td>
+      <td>0.7500</td>
+      <td>Colorado Rockies</td>
+      <td>-300</td>
     </tr>
     <tr>
-      <th>25214</th>
-      <td>2023-05-31</td>
-      <td>Ildemaro Vargas</td>
+      <th>44703</th>
+      <td>2023-08-31</td>
+      <td>Miguel Cabrera</td>
       <td>0</td>
-      <td>0.7522</td>
+      <td>0.7500</td>
+      <td>Miami Marlins</td>
+      <td>-300</td>
+    </tr>
+    <tr>
+      <th>45157</th>
+      <td>2023-09-02</td>
+      <td>Harrison Bader</td>
+      <td>0</td>
+      <td>0.7500</td>
+      <td>New York Yankees</td>
+      <td>-300</td>
+    </tr>
+    <tr>
+      <th>34303</th>
+      <td>2023-07-22</td>
+      <td>DJ Stewart</td>
+      <td>1</td>
+      <td>0.7500</td>
+      <td>Baltimore Orioles</td>
+      <td>-300</td>
+    </tr>
+    <tr>
+      <th>45573</th>
+      <td>2023-09-03</td>
+      <td>Daulton Varsho</td>
+      <td>0</td>
+      <td>0.7500</td>
       <td>Arizona Diamondbacks</td>
-      <td>-304</td>
-    </tr>
-    <tr>
-      <th>9631</th>
-      <td>2023-04-22</td>
-      <td>Josh Bell</td>
-      <td>1</td>
-      <td>0.7520</td>
-      <td>Cleveland Guardians</td>
-      <td>-303</td>
-    </tr>
-    <tr>
-      <th>1832</th>
-      <td>2023-04-04</td>
-      <td>Eddie Rosario</td>
-      <td>1</td>
-      <td>0.7506</td>
-      <td>Minnesota Twins</td>
-      <td>-301</td>
-    </tr>
-    <tr>
-      <th>9734</th>
-      <td>2023-04-22</td>
-      <td>Ke'Bryan Hayes</td>
-      <td>1</td>
-      <td>0.7506</td>
-      <td>Pittsburgh Pirates</td>
-      <td>-301</td>
+      <td>-300</td>
     </tr>
   </tbody>
 </table>
-<p>262 rows × 6 columns</p>
+<p>99 rows × 6 columns</p>
 </div>
 
 
@@ -221,11 +221,11 @@ print(get_eval_profile(test_prediction, 0.80))
 print(get_eval_profile(test_prediction, 0.85))
 ```
 
-    (404, 0.8564356435643564)
-    (325, 0.8738461538461538)
-    (262, 0.8931297709923665)
-    (174, 0.896551724137931)
-    (104, 0.9230769230769231)
+    (424, 0.5660377358490566)
+    (212, 0.5990566037735849)
+    (99, 0.5858585858585859)
+    (31, 0.7741935483870968)
+    (2, 1.0)
 
 
 
