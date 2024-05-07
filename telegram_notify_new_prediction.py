@@ -2,6 +2,16 @@ import os
 if os.path.exists('credential.json'):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.getcwd(), 'credential.json')
 
+import logging, sys, datetime, time
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 from dotenv import load_dotenv
 
@@ -18,6 +28,6 @@ message_2_strikeouts = notification.new_confident_predictions.get_new_confident_
     notification.new_confident_predictions.PropertyType.TWO_STRIKEOUTS
 )
 
-print(f'{message_2_hits=}\n{message_2_strikeouts=}')
+logging.info(f'{message_2_hits=}\n{message_2_strikeouts=}')
 notification.telegram.post_message(f"{message_2_hits}\n{message_2_strikeouts}")
 
