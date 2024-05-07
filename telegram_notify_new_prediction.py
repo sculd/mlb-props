@@ -18,6 +18,6 @@ message_2_strikeouts = notification.new_confident_predictions.get_new_confident_
     notification.new_confident_predictions.PropertyType.TWO_STRIKEOUTS
 )
 
-
+print(f'{message_2_hits=}\n{message_2_strikeouts=}')
 notification.telegram.post_message(f"{message_2_hits}\n{message_2_strikeouts}")
 
