@@ -20,14 +20,16 @@ load_dotenv()  # take environment variables from .env.
 import notification.new_confident_predictions
 import notification.telegram
 
-message_2_hits = notification.new_confident_predictions.get_new_confident_predictions_description(
+count_2_hits, message_2_hits = notification.new_confident_predictions.get_new_confident_predictions_count_and_description(
     notification.new_confident_predictions.PropertyType.TWO_HITS
 )
 
-message_2_strikeouts = notification.new_confident_predictions.get_new_confident_predictions_description(
+count_2_strikeouts, message_2_strikeouts = notification.new_confident_predictions.get_new_confident_predictions_count_and_description(
     notification.new_confident_predictions.PropertyType.TWO_STRIKEOUTS
 )
 
 logging.info(f'{message_2_hits=}\n{message_2_strikeouts=}')
-notification.telegram.post_message(f"{message_2_hits}\n{message_2_strikeouts}")
-
+if count_2_hits > 0 or count_2_strikeouts > 0:
+    notification.telegram.post_message(f"{message_2_hits}\n{message_2_strikeouts}")
+else:
+    logging.info('not sending a message as no new confident predictions are found.')

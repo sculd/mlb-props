@@ -7,6 +7,7 @@ from google.cloud import bigquery
 from enum import auto, Enum
 
 import datetime, pytz
+import typing
 import pandas as pd, numpy as np
 
 gcp_project_id = "trading-290017"
@@ -99,12 +100,12 @@ def get_recent_confident_prediction_dits(property_type: PropertyType):
     return latest_row_dict, second_latest_row_dict
 
 
-def get_new_confident_predictions_description(property_type: PropertyType) -> str:
+def get_new_confident_predictions_count_and_description(property_type: PropertyType) -> typing.Tuple[int, str]:
     latest_row_dict, second_latest_row_dict = get_recent_confident_prediction_dits(property_type)
     prev_confident_predictions = second_latest_row_dict['cnt'] if second_latest_row_dict is not None else 0
     latest_confident_predictions = latest_row_dict['cnt'] if latest_row_dict is not None else 0
     new_confident_predictions = latest_confident_predictions - prev_confident_predictions
 
     when = latest_row_dict['ingestion_datetime_hourly'] if latest_row_dict is not None else '(unknown time)'
-    return f"{property_type}: {new_confident_predictions} new confident predictions since {when}."
+    return new_confident_predictions, f"{property_type}: {new_confident_predictions} new confident predictions since {when}."
 
